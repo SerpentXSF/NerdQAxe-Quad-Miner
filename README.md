@@ -54,7 +54,32 @@ the firmware build (it needs Node.js if you build outside the container).
 
 Outputs: `firmware/build/esp-miner.bin` (app) and `firmware/build/www.bin` (web UI).
 
-## Flash
+## Flash (end users)
+
+You do not need to build anything. Grab the pre-built **factory image**
+(`esp-miner-factory-NerdQAxe++-*.bin`) from the
+[Releases page](https://github.com/SerpentXSF/NerdQAxe-Quad-Miner/releases),
+plug the NerdQAxe++ into your computer with a USB-C data cable, and flash it in
+one shot:
+
+```
+pip install esptool
+python -m esptool --chip esp32s3 --port <PORT> write-flash 0x0 esp-miner-factory-NerdQAxe++-<version>.bin
+```
+
+Replace `<PORT>` with your serial port (`COMx` on Windows, `/dev/ttyACM0` or
+`/dev/tty.usbmodem*` on Linux/macOS). If esptool stalls on the ESP32-S3
+USB-Serial/JTAG port, add `--no-stub`.
+
+The factory image is a full flash (bootloader + partitions + app + web UI). After
+it boots, connect to the device's WiFi setup portal, join your network, then open
+its web UI and configure your pools.
+
+**Already running this firmware?** Update over the air instead: on the device web
+UI's firmware page, upload the `esp-miner.bin` and `www.bin` from a Release — no
+cable needed, and your config is kept.
+
+## Flash (from a local build)
 
 Full flash of a NerdQAxe++ over its USB port:
 
@@ -69,14 +94,23 @@ python -m esptool --chip esp32s3 --port <PORT> \
   0xf10000 build/ota_data_initial.bin
 ```
 
+To build the single-file factory image yourself: `./merge_bin.sh esp-miner-factory.bin`
+(run from `firmware/` after a build).
+
 For code-only updates, flashing just `0x10000 esp-miner.bin` is enough and keeps
 your saved config. If esptool stalls on the ESP32-S3 USB-Serial/JTAG port, add
 `--no-stub`.
 
 ## Configure your pools
 
-Open the device web UI, go to **Settings**, set **Pool mode** to **Dual**, and add
-your pools with the **Add Pool** button. Set a weight on each. Save.
+Open the device web UI and go to **Settings**. Set **Pool mode** to **Dual** to
+mine several pools at once, then use **Add Pool** / **Remove** to pick how many you
+want: **1, 2, 3, or 4 pools**. Fill in each pool's host, port, and user, and (for
+3+ pools) set a **weight** per pool to split the hashrate. Save. Weight changes
+apply live; adding or removing a pool takes effect after a restart.
+
+The home dashboard shows each pool's live hashrate share, accepted shares, and
+best difficulty.
 
 Pools can also be configured over the REST API:
 
