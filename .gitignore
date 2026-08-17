@@ -18,3 +18,7 @@ firmware/main/http_server/axe-os/.angular/
 .DS_Store
 Thumbs.db
 *.swp
+
+# Release assets (attached to GitHub releases, not committed)
+firmware/nerdqaxe-quad-miner-factory-*.bin
+release-v*/

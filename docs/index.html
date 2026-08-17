@@ -86,10 +86,18 @@
     </div>
 
     <h2>After flashing</h2>
+    <div class="note">
+      <strong>The device will drop off your network &mdash; this is normal.</strong> A full flash erases
+      saved settings, including WiFi, so the miner will <em>not</em> come back at its old IP address. It
+      boots into a temporary setup access point instead. This is expected, not a brick.
+    </div>
     <ul>
-      <li>The device boots into a WiFi setup portal &mdash; join it and connect the miner to your network.</li>
-      <li>Open the device's web UI, go to <strong>Settings</strong>, set <strong>Pool mode</strong> to
-        <strong>Dual</strong>, and add 1&ndash;4 pools with a weight each.</li>
+      <li>On a phone or laptop, join the miner's own WiFi network (an open AP named like
+        <code>NerdQAxe-xxxx</code>). A setup page opens automatically; use it to connect the miner to your
+        home network.</li>
+      <li>Find the miner's new IP (your router's device list, or it re-appears on the network), open its
+        web UI, go to <strong>Settings</strong>, set <strong>Pool mode</strong> to <strong>Dual</strong>,
+        and add 1&ndash;4 pools with a weight each.</li>
       <li>The dashboard shows every pool's live hashrate.</li>
     </ul>
 

@@ -356,8 +356,12 @@ extern "C" void app_main(void)
 
         setup_network(board->hasEthernet());
 
-        // when a username is configured we will continue with startup and start mining
-        char *username = Config::cfgGetStrAlloc(NVS_CONFIG_STRATUM_USER, "");
+        // when a username is configured we will continue with startup and start mining.
+        // Use the indexed pool-0 accessor (with legacy flat-key fallback) so the gate
+        // matches what the multi-pool settings UI actually writes; otherwise a device
+        // configured on a wiped NVS stores only "stratumuser0" and this gate stays empty,
+        // leaving the ASICs unpowered even though a pool is configured.
+        char *username = Config::getPoolUser(0);
         MemoryGuard gUsername(username);
         if (username && username[0] != '\0') {
             // wifi is connected, switch the AP off (no-op if already done by NetworkManager)

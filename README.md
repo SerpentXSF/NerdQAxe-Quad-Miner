@@ -85,9 +85,14 @@ Replace `<PORT>` with your serial port (`COMx` on Windows, `/dev/ttyACM0` or
 `/dev/tty.usbmodem*` on Linux/macOS). If esptool stalls on the ESP32-S3
 USB-Serial/JTAG port, add `--no-stub`.
 
-The factory image is a full flash (bootloader + partitions + app + web UI). After
-it boots, connect to the device's WiFi setup portal, join your network, then open
-its web UI and configure your pools.
+The factory image is a full flash (bootloader + partitions + app + web UI).
+
+> **A full flash erases saved settings, including WiFi.** After it boots, the miner
+> will **not** reappear at its old IP — it starts a temporary setup access point
+> (an open network named like `NerdQAxe-xxxx`). This is expected, not a brick. Join
+> that AP from a phone or laptop, use the setup page to connect the miner to your
+> network, then open its web UI and configure your pools. For a code-only update
+> that keeps your config, use the OTA path above instead of a full flash.
 
 ## Flash (from a local build)
 
