@@ -133,22 +133,14 @@
                             aria-hidden="true"></span>
                     </div>
 
-                    <!-- Dual pool: show per-pool hashrates stacked, without units + with assignment % -->
+                    <!-- Dual pool: one row per pool - its hashrate share + allocation % -->
                     <div *ngIf="isDualPool" class="pool-summary-square__hashrate-split" aria-hidden="true">
-                      <div class="pool-summary-square__hashrate-split-row">
+                      <div class="pool-summary-square__hashrate-split-row" *ngFor="let p of dashboardPools">
                         <span
-                          class="pool-summary-square__hashrate-split-value">{{ getPoolHashrate(0) | number: '1.2-2' }}</span>
+                          class="pool-summary-square__hashrate-split-value">{{ (p.hashRate ?? 0) | number: '1.2-2' }}</span>
                         <span class="pool-summary-square__hashrate-split-divider" aria-hidden="true"></span>
                         <span
-                          class="pool-summary-square__hashrate-split-pct">{{ getActiveBalance(0) | number: '1.0-0' }}
-                          %</span>
-                      </div>
-                      <div class="pool-summary-square__hashrate-split-row">
-                        <span
-                          class="pool-summary-square__hashrate-split-value">{{ getPoolHashrate(1) | number: '1.2-2' }}</span>
-                        <span class="pool-summary-square__hashrate-split-divider" aria-hidden="true"></span>
-                        <span
-                          class="pool-summary-square__hashrate-split-pct">{{ getActiveBalance(1) | number: '1.0-0' }}
+                          class="pool-summary-square__hashrate-split-pct">{{ (p.allocation ?? 0) | number: '1.0-0' }}
                           %</span>
                       </div>
                     </div>
