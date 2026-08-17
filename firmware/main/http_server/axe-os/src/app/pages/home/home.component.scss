@@ -261,6 +261,23 @@ nb-card-header{
   min-height: var(--metric-square);
 }
 
+/* Multi-pool (3-4): a scrollable vertical stack of compact pool rows. The white
+   container stays the same height as the hashrate box next to it and scrolls when
+   the pools don't fit, so the dashboard row stays aligned. */
+.pool-tile-layout--multi{
+  gap: 6px;
+  height: 100%;
+  max-height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.pool-tile-layout--multi .pool-tile-section{
+  flex: 0 0 auto;
+  /* each pool row about the height of one dual-mode row */
+  height: calc(var(--metric-square) / 2);
+  min-height: 44px;
+}
+
 .pool-tile-section{
   flex: 1 1 0;
   min-height: 0;

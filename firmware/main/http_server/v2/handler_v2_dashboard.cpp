@@ -134,24 +134,18 @@ esp_err_t GET_V2_dashboard(httpd_req_t *req)
         JsonObject stratum = doc["stratum"].to<JsonObject>();
         STRATUM_MANAGER->getManagerInfoJson(stratum);
 
-        // Enrich each pool entry with host / port / user from NVS config
-        char *urls[2]  = { Config::getStratumURL(), Config::getStratumFallbackURL() };
-        char *users[2] = { Config::getStratumUser(), Config::getStratumFallbackUser() };
-        int   ports[2] = { (int) Config::getStratumPortNumber(), (int) Config::getStratumFallbackPortNumber() };
-
-        // the managers report both pools in config order (0 = primary,
-        // 1 = fallback/secondary), so the array index is the config index
+        // Enrich each pool entry with host / port / user from NVS config, for
+        // every pool the manager reported (indexed config, 0 = primary).
         JsonArray pools = stratum["pools"].as<JsonArray>();
-        for (int i = 0; i < (int) pools.size() && i < 2; i++) {
+        for (int i = 0; i < (int) pools.size() && i < MAX_POOLS; i++) {
             JsonObject pool = pools[i].as<JsonObject>();
-            pool["host"] = urls[i];
-            pool["port"] = ports[i];
-            pool["user"] = users[i];
-        }
-
-        for (int i = 0; i < 2; i++) {
-            if (urls[i])  free(urls[i]);
-            if (users[i]) free(users[i]);
+            char *url  = Config::getPoolURL(i);
+            char *user = Config::getPoolUser(i);
+            pool["host"] = url;
+            pool["port"] = (int) Config::getPoolPort(i);
+            pool["user"] = user;
+            safe_free(url);
+            safe_free(user);
         }
     }
 
