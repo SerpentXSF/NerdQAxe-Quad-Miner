@@ -1,0 +1,19 @@
+# Internal working files (kept local, not published)
+/PATH-A-DESIGN.md
+/STATUS-AND-TODO.md
+/firmware-backups/
+/baseline-build/
+
+# Build artifacts / dependencies (firmware/.gitignore covers most of these too)
+firmware/build/
+firmware/sdkconfig
+firmware/sdkconfig.old
+firmware/managed_components/
+firmware/main/http_server/axe-os/node_modules/
+firmware/main/http_server/axe-os/dist/
+firmware/main/http_server/axe-os/.angular/
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.swp
