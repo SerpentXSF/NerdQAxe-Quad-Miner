@@ -105,10 +105,9 @@ esp_err_t GET_V2_settings(httpd_req_t *req)
             pool["protocol"]         = Config::getPoolProtocol(i);
             pool["sv2AuthorityPubkey"] = sv2;
             pool["sv2ChannelType"]   = Config::getPoolSV2ChannelType(i);
-            // Coinbase verification is only stored for pools 0/1.
-            pool["coinbaseVerifyMode"]  = (i < 2) ? Config::getCoinbaseVerifyMode(i) : 0;
-            pool["coinbaseMaxFee"]      = ((i < 2) ? Config::getCoinbaseMaxFee(i) : 30) / 10.0f;
-            pool["coinbaseVerifyForce"] = (i < 2) ? Config::getCoinbaseVerifyForce(i) : false;
+            pool["coinbaseVerifyMode"]  = Config::getCoinbaseVerifyMode(i);
+            pool["coinbaseMaxFee"]      = Config::getCoinbaseMaxFee(i) / 10.0f;
+            pool["coinbaseVerifyForce"] = Config::getCoinbaseVerifyForce(i);
             pool["weight"]           = Config::getPoolWeight(i);
             safe_free(url);
             safe_free(user);
@@ -316,35 +315,34 @@ esp_err_t PATCH_V2_settings(httpd_req_t *req)
             if (pool["sv2ChannelType"].is<uint16_t>())     Config::setPoolSV2ChannelType(i, pool["sv2ChannelType"].as<uint16_t>());
             if (pool["weight"].is<uint16_t>())             Config::setPoolWeight(i, pool["weight"].as<uint16_t>());
 
-            // Coinbase verification is only stored for pools 0/1.
-            if (i < 2) {
-                if (pool["coinbaseVerifyMode"].is<uint16_t>()) {
-                    verifyChanged[i] |= Config::getCoinbaseVerifyMode(i) != pool["coinbaseVerifyMode"].as<uint16_t>();
-                    Config::setCoinbaseVerifyMode(i, pool["coinbaseVerifyMode"].as<uint16_t>());
-                }
-                if (pool["coinbaseMaxFee"].is<float>()) {
-                    uint16_t newVal = (uint16_t)roundf(pool["coinbaseMaxFee"].as<float>() * 10.0f);
-                    verifyChanged[i] |= Config::getCoinbaseMaxFee(i) != newVal;
-                    Config::setCoinbaseMaxFee(i, newVal);
-                }
-                if (pool["coinbaseVerifyForce"].is<bool>()) {
-                    verifyChanged[i] |= Config::getCoinbaseVerifyForce(i) != pool["coinbaseVerifyForce"].as<bool>();
-                    Config::setCoinbaseVerifyForce(i, pool["coinbaseVerifyForce"].as<bool>());
-                }
+            // Coinbase verification (per pool, indexed storage).
+            if (pool["coinbaseVerifyMode"].is<uint16_t>()) {
+                verifyChanged[i] |= Config::getCoinbaseVerifyMode(i) != pool["coinbaseVerifyMode"].as<uint16_t>();
+                Config::setCoinbaseVerifyMode(i, pool["coinbaseVerifyMode"].as<uint16_t>());
+            }
+            if (pool["coinbaseMaxFee"].is<float>()) {
+                uint16_t newVal = (uint16_t)roundf(pool["coinbaseMaxFee"].as<float>() * 10.0f);
+                verifyChanged[i] |= Config::getCoinbaseMaxFee(i) != newVal;
+                Config::setCoinbaseMaxFee(i, newVal);
+            }
+            if (pool["coinbaseVerifyForce"].is<bool>()) {
+                verifyChanged[i] |= Config::getCoinbaseVerifyForce(i) != pool["coinbaseVerifyForce"].as<bool>();
+                Config::setCoinbaseVerifyForce(i, pool["coinbaseVerifyForce"].as<bool>());
             }
         }
     }
 
     // Re-run verification for changed pools
-    for (int i = 0; i < 2; i++) {
+    bool anyVerifyBlocked = false;
+    for (int i = 0; i < MAX_POOLS; i++) {
         if (verifyChanged[i]) {
             STRATUM_MANAGER->clearVerifyBlocked(i);
             STRATUM_MANAGER->resetVerificationStats(i);
         }
         STRATUM_MANAGER->rerunVerification(i);
+        if (STRATUM_MANAGER->isVerifyBlocked(i)) anyVerifyBlocked = true;
     }
-    if (SYSTEM_MODULE.getBoardError() == Board::Error::COINBASE_VERIFY_FAULT &&
-        !STRATUM_MANAGER->isVerifyBlocked(0) && !STRATUM_MANAGER->isVerifyBlocked(1)) {
+    if (SYSTEM_MODULE.getBoardError() == Board::Error::COINBASE_VERIFY_FAULT && !anyVerifyBlocked) {
         SYSTEM_MODULE.clearBoardError();
     }
 

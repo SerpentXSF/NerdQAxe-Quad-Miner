@@ -175,7 +175,7 @@
                             <nb-checkbox formControlName="enonceSubscribe">{{ 'MINING.ENABLE_EXTRANONCE' | translate }}</nb-checkbox>
                         </div>
 
-                        <div class="form-row" style="align-items: flex-start;" *ngIf="i < 2">
+                        <div class="form-row" style="align-items: flex-start;">
                             <nb-checkbox [checked]="poolCtrl.get('coinbaseVerifyMode')?.value > 0"
                                          (checkedChange)="toggleCoinbaseVerify($event, i)"
                                          style="margin-top: 6px;">

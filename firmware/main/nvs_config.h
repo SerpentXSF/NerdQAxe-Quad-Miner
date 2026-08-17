@@ -91,13 +91,17 @@
 #define NVS_CONFIG_BEST_DIFF "bestdiff"
 
 
-// Coinbase verification (per pool)
+// Coinbase verification (per pool). Legacy 2-slot keys (primary + fallback):
 #define NVS_CONFIG_COINBASE_VERIFY_MODE    "cb_verify_mode"
 #define NVS_CONFIG_COINBASE_MAX_FEE        "cb_max_fee"
 #define NVS_CONFIG_COINBASE_VERIFY_FORCE   "cb_vfy_force"
 #define NVS_CONFIG_FB_COINBASE_VERIFY_MODE "fb_cb_vfy_mode"
 #define NVS_CONFIG_FB_COINBASE_MAX_FEE     "fb_cb_max_fee"
 #define NVS_CONFIG_FB_COINBASE_VERIFY_FORCE "fb_cb_vfy_frc"
+// Indexed N-pool bases (cbmode0.., cbfee0.., cbforce0..) - fall back to the legacy keys above.
+#define NVS_CONFIG_COINBASE_VERIFY_MODE_N  "cbmode"
+#define NVS_CONFIG_COINBASE_MAX_FEE_N      "cbfee"
+#define NVS_CONFIG_COINBASE_VERIFY_FORCE_N "cbforce"
 
 // OTP
 #define NVS_CONFIG_OTP_SECRET "otp_secret"
@@ -416,32 +420,17 @@ namespace Config {
     inline void setOTPEnabled(bool value) { cfgSetU16(NVS_CONFIG_OTP_ENABLED, value ? 1 : 0); }
     inline bool isOTPEnabled() { return cfgGetU16(NVS_CONFIG_OTP_ENABLED, 0) != 0; }
 
-    // 0 = disabled, 1 = Basic (address present), 2 = Extended (address present + fee <= maxFee)
-    inline void setCoinbaseVerifyMode(int pool, uint16_t v) {
-        pool == 0 ? cfgSetU16(NVS_CONFIG_COINBASE_VERIFY_MODE, v)
-                  : cfgSetU16(NVS_CONFIG_FB_COINBASE_VERIFY_MODE, v);
-    }
-    inline uint16_t getCoinbaseVerifyMode(int pool = 0) {
-        return pool == 0 ? cfgGetU16(NVS_CONFIG_COINBASE_VERIFY_MODE, 0)
-                         : cfgGetU16(NVS_CONFIG_FB_COINBASE_VERIFY_MODE, 0);
-    }
-    inline void setCoinbaseMaxFee(int pool, uint16_t v) {
-        pool == 0 ? cfgSetU16(NVS_CONFIG_COINBASE_MAX_FEE, v)
-                  : cfgSetU16(NVS_CONFIG_FB_COINBASE_MAX_FEE, v);
-    }
-    // stored as tenths of percent: 5 = 0.5%, 30 = 3.0%
-    inline uint16_t getCoinbaseMaxFee(int pool = 0) {
-        return pool == 0 ? cfgGetU16(NVS_CONFIG_COINBASE_MAX_FEE, 30)
-                         : cfgGetU16(NVS_CONFIG_FB_COINBASE_MAX_FEE, 30);
-    }
-    inline void setCoinbaseVerifyForce(int pool, bool v) {
-        pool == 0 ? cfgSetU16(NVS_CONFIG_COINBASE_VERIFY_FORCE, v ? 1 : 0)
-                  : cfgSetU16(NVS_CONFIG_FB_COINBASE_VERIFY_FORCE, v ? 1 : 0);
-    }
-    inline bool getCoinbaseVerifyForce(int pool = 0) {
-        return pool == 0 ? cfgGetU16(NVS_CONFIG_COINBASE_VERIFY_FORCE, 0) != 0
-                         : cfgGetU16(NVS_CONFIG_FB_COINBASE_VERIFY_FORCE, 0) != 0;
-    }
+    // Per-pool coinbase verification, indexed 0..MAX_POOLS-1 (implemented out-of-line
+    // in nvs_config.cpp). Storage keys are indexed (cbmode0.., cbfee0.., cbforce0..);
+    // a missing indexed key falls back to the legacy 2-pool keys (pool 0 -> primary,
+    // pool 1 -> fallback) so existing configs keep working. Pools >= 2 use defaults.
+    // Mode: 0 = disabled, 1 = Basic (address present), 2 = Extended (address + fee<=maxFee).
+    void     setCoinbaseVerifyMode(int pool, uint16_t v);
+    uint16_t getCoinbaseVerifyMode(int pool = 0);
+    void     setCoinbaseMaxFee(int pool, uint16_t v);
+    uint16_t getCoinbaseMaxFee(int pool = 0);        // tenths of percent: 5 = 0.5%, 30 = 3.0%
+    void     setCoinbaseVerifyForce(int pool, bool v);
+    bool     getCoinbaseVerifyForce(int pool = 0);
 
     void migrate_config();
 }
