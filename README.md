@@ -54,17 +54,31 @@ the firmware build (it needs Node.js if you build outside the container).
 
 Outputs: `firmware/build/esp-miner.bin` (app) and `firmware/build/www.bin` (web UI).
 
-## Flash (end users)
+## Update (most people)
 
-You do not need to build anything. Grab the pre-built **factory image**
-(`esp-miner-factory-NerdQAxe++-*.bin`) from the
-[Releases page](https://github.com/SerpentXSF/NerdQAxe-Quad-Miner/releases),
-plug the NerdQAxe++ into your computer with a USB-C data cable, and flash it in
-one shot:
+If your NerdQAxe++ already runs this firmware (or any NerdQAxe firmware), the easy
+path is an **over-the-air update** — no cable, and your pool config is kept. On the
+device web UI's firmware update page, upload from the
+[latest release](https://github.com/SerpentXSF/NerdQAxe-Quad-Miner/releases/latest):
+
+- `esp-miner.bin` — the firmware
+- `www.bin` — the web UI (upload this too so the site matches the firmware)
+
+## Flash a fresh device
+
+You do not need to build anything.
+
+**Easiest — web flasher (Chrome/Edge):** open the
+[**Web Flasher**](https://serpentxsf.github.io/NerdQAxe-Quad-Miner/), plug in the
+NerdQAxe++ with a USB-C data cable, and click *Connect & Flash*. It flashes the
+factory image straight from your browser.
+
+**Or with esptool:** grab `nerdqaxe-quad-miner-factory-*.bin` from the
+[Releases page](https://github.com/SerpentXSF/NerdQAxe-Quad-Miner/releases) and:
 
 ```
 pip install esptool
-python -m esptool --chip esp32s3 --port <PORT> write-flash 0x0 esp-miner-factory-NerdQAxe++-<version>.bin
+python -m esptool --chip esp32s3 --port <PORT> write-flash 0x0 nerdqaxe-quad-miner-factory-<version>.bin
 ```
 
 Replace `<PORT>` with your serial port (`COMx` on Windows, `/dev/ttyACM0` or
@@ -74,10 +88,6 @@ USB-Serial/JTAG port, add `--no-stub`.
 The factory image is a full flash (bootloader + partitions + app + web UI). After
 it boots, connect to the device's WiFi setup portal, join your network, then open
 its web UI and configure your pools.
-
-**Already running this firmware?** Update over the air instead: on the device web
-UI's firmware page, upload the `esp-miner.bin` and `www.bin` from a Release — no
-cable needed, and your config is kept.
 
 ## Flash (from a local build)
 

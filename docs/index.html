@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NerdQAxe Quad Miner - Web Flasher</title>
+  <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: #1b1a2e;
+      color: #e7e7f2;
+      line-height: 1.55;
+    }
+    .wrap { max-width: 720px; margin: 0 auto; padding: 40px 20px 64px; }
+    h1 { font-size: 1.9rem; margin: 0 0 4px; }
+    h2 { font-size: 1.15rem; margin: 32px 0 8px; color: #b9b7e0; }
+    .sub { color: #9d9bc4; margin: 0 0 28px; }
+    .card {
+      background: #252340;
+      border: 1px solid #34315a;
+      border-radius: 12px;
+      padding: 24px;
+      margin: 18px 0;
+    }
+    .flash-cta { text-align: center; }
+    esp-web-install-button { --esp-tools-button-color: #7c5cff; }
+    a { color: #9b8bff; }
+    code {
+      background: #15142a;
+      border: 1px solid #34315a;
+      border-radius: 6px;
+      padding: 1px 6px;
+      font-size: 0.92em;
+    }
+    pre {
+      background: #15142a;
+      border: 1px solid #34315a;
+      border-radius: 8px;
+      padding: 12px 14px;
+      overflow-x: auto;
+    }
+    ul { padding-left: 20px; }
+    .note {
+      border-left: 3px solid #7c5cff;
+      background: #201f38;
+      padding: 12px 16px;
+      border-radius: 0 8px 8px 0;
+      margin: 16px 0;
+    }
+    .muted { color: #8a88b0; font-size: 0.9rem; }
+    .unsupported { display: none; color: #ffb4b4; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>NerdQAxe Quad Miner</h1>
+    <p class="sub">Mine up to 4 pools at once on a NerdQAxe++ &mdash; open source.</p>
+
+    <div class="card flash-cta">
+      <p><strong>Flash a fresh device from your browser</strong> (no tools to install).</p>
+      <esp-web-install-button manifest="./manifest.json">
+        <button slot="activate">Connect &amp; Flash</button>
+        <span slot="unsupported" class="unsupported">
+          Your browser can't do Web Serial. Use Chrome or Edge on desktop, or flash with esptool.
+        </span>
+        <span slot="not-allowed" class="unsupported">
+          Web Serial needs a secure (https) page and permission to access the serial port.
+        </span>
+      </esp-web-install-button>
+      <p class="muted" style="margin-top: 14px;">
+        Requires Chrome or Edge on desktop. Plug the NerdQAxe++ in with a USB-C data cable,
+        click the button, pick the serial port, and confirm. This does a full flash.
+      </p>
+    </div>
+
+    <div class="note">
+      <strong>Already running the firmware?</strong> You probably don't need this page. Update over the
+      air instead: open your device's web UI, go to the firmware update page, and upload
+      <code>esp-miner.bin</code> (the firmware) and <code>www.bin</code> (the website, so it matches the
+      firmware). No cable, and your pool config is kept. Grab those files from the
+      <a href="https://github.com/SerpentXSF/NerdQAxe-Quad-Miner/releases/latest">latest release</a>.
+    </div>
+
+    <h2>After flashing</h2>
+    <ul>
+      <li>The device boots into a WiFi setup portal &mdash; join it and connect the miner to your network.</li>
+      <li>Open the device's web UI, go to <strong>Settings</strong>, set <strong>Pool mode</strong> to
+        <strong>Dual</strong>, and add 1&ndash;4 pools with a weight each.</li>
+      <li>The dashboard shows every pool's live hashrate.</li>
+    </ul>
+
+    <h2>Prefer the command line?</h2>
+    <p>Download <code>nerdqaxe-quad-miner-factory-v*.bin</code> from the
+      <a href="https://github.com/SerpentXSF/NerdQAxe-Quad-Miner/releases/latest">releases page</a> and:</p>
+    <pre>pip install esptool
+python -m esptool --chip esp32s3 --port &lt;PORT&gt; write-flash 0x0 nerdqaxe-quad-miner-factory-v*.bin</pre>
+    <p class="muted">Add <code>--no-stub</code> if esptool stalls on the ESP32-S3 USB-Serial/JTAG port.</p>
+
+    <p class="muted" style="margin-top: 40px;">
+      <a href="https://github.com/SerpentXSF/NerdQAxe-Quad-Miner">Source on GitHub</a> &middot;
+      Based on shufps/ESP-Miner-NerdQAxePlus &middot; GPL-3.0
+    </p>
+  </div>
+</body>
+</html>
