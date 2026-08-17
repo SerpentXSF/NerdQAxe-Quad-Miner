@@ -211,7 +211,9 @@
           @let poolRight = isDualPool ? getPoolInfo(1) : null;
           @let usingFallback = info.stratum.usingFallback;
 
-          <nb-card class="h-100 pool-tile-card" [class.pool-tile-card--dual]="isDualPool">
+          <nb-card class="h-100 pool-tile-card"
+                   [class.pool-tile-card--dual]="isDualPool && poolCount <= 2"
+                   [class.pool-tile-card--multi]="isDualPool && poolCount > 2">
             <nb-card-body class="no-scroll pool-tile-card__body" style="position: relative;">
 
               <button
@@ -224,9 +226,11 @@
                 <nb-icon icon="refresh-outline"></nb-icon>
               </button>
 
-              <div class="pool-tile-layout pool-tile-layout--mirror" [class.pool-tile-layout--dual]="isDualPool">
+              <div class="pool-tile-layout pool-tile-layout--mirror"
+                   [class.pool-tile-layout--dual]="isDualPool && poolCount <= 2"
+                   [class.pool-tile-layout--multi]="isDualPool && poolCount > 2">
 
-                <!-- SINGLE POOL -->
+                <!-- SINGLE POOL (failover / non-dual) -->
                 <ng-container *ngIf="!isDualPool">
                   <div class="pool-tile-section pool-tile-section--single" role="group">
                     <ng-container
@@ -236,8 +240,8 @@
                   </div>
                 </ng-container>
 
-                <!-- DUAL POOL: stack pool 2 under pool 1 inside the same white container -->
-                <ng-container *ngIf="isDualPool">
+                <!-- DUAL POOL, 1-2 pools: pool 2 stacked under pool 1 (fixed height) -->
+                <ng-container *ngIf="isDualPool && poolCount <= 2">
                   <div class="pool-tile-section pool-tile-section--top" role="group">
                     <ng-container
                       [ngTemplateOutlet]="poolHalf"
@@ -249,6 +253,17 @@
                     <ng-container
                       [ngTemplateOutlet]="poolHalf"
                       [ngTemplateOutletContext]="{ pool: poolRight, idx: 1, usingFallback: false, disconnected: !poolRight?.connected, blockedReason: poolRight?.verifyBlocked }">
+                    </ng-container>
+                  </div>
+                </ng-container>
+
+                <!-- DUAL POOL, 3-4 pools: one tile per pool, scrollable stack -->
+                <ng-container *ngIf="isDualPool && poolCount > 2">
+                  <div class="pool-tile-section pool-tile-section--multi" role="group"
+                       *ngFor="let p of dashboardPools; let idx = index">
+                    <ng-container
+                      [ngTemplateOutlet]="poolHalf"
+                      [ngTemplateOutletContext]="{ pool: p, idx: idx, usingFallback: false, multi: true, disconnected: !p?.connected, blockedReason: p?.verifyBlocked }">
                     </ng-container>
                   </div>
                 </ng-container>
@@ -267,7 +282,7 @@
               </div>
 
               <!-- Templates -->
-              <ng-template #poolHalf let-pool="pool" let-idx="idx" let-usingFallback="usingFallback" let-disconnected="disconnected" let-blockedReason="blockedReason">
+              <ng-template #poolHalf let-pool="pool" let-idx="idx" let-usingFallback="usingFallback" let-disconnected="disconnected" let-blockedReason="blockedReason" let-multi="multi">
                 <div class="pool-tile-half" dir="ltr" [class.pool-tile-half--dual]="isDualPool">
 
                   <!-- Grey metric bar -->
@@ -282,7 +297,7 @@
 
                     <ng-container *ngIf="!disconnected && !blockedReason">
                       <div class="pool-tile-metricbar__fill" *ngIf="isDualPool"
-                           [style.width.%]="getActiveBalance((idx ?? 0) === 0 ? 0 : 1)"></div>
+                           [style.width.%]="pool.allocation ?? 0"></div>
 
                       <div class="pool-tile-metricbar__inner">
 
@@ -326,6 +341,12 @@
                           <div class="pool-tile-metricbar__rejected">
                             <span class="pool-tile-info__value">{{ (poolDiff(pool)) | number: '1.0-0' }}</span>
                             <span class="pool-tile-info__label">&nbsp;{{ 'POOL_INFO.DIFF' | translate }}</span>
+                          </div>
+
+                          <!-- Live per-pool hashrate share (dual mode) -->
+                          <div class="pool-tile-metricbar__rejected" *ngIf="isDualPool && pool.hashRate != null">
+                            <span class="pool-tile-info__value">{{ pool.hashRate | number: '1.0-0' }}</span>
+                            <span class="pool-tile-info__label">&nbsp;GH/s</span>
                           </div>
                         </div>
 
@@ -377,7 +398,7 @@
 
                       <!-- Dual pool: show the pool allocation % in the title (right-aligned) -->
                       <div *ngIf="isDualPool" class="pool-tile-details__header-right">
-                        <span class="pool-tile-details__allocpct">{{ getActiveBalance(idx ?? 0) | number: '1.0-0' }}%</span>
+                        <span class="pool-tile-details__allocpct">{{ (pool.allocation ?? 0) | number: '1.0-0' }}%</span>
                       </div>
                     </div>
 

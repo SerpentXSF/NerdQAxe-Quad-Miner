@@ -1870,7 +1870,7 @@ private setAxisPadding(cfg: any, persist: boolean = false): void {
   }
 
 
-  public getPoolInfo(i?: 0 | 1): IDashboardV2Pool {
+  public getPoolInfo(i?: number): IDashboardV2Pool {
     const stratum = this._info?.stratum;
     if (!this._info || !stratum) return {} as any;
 
@@ -1879,6 +1879,14 @@ private setAxisPadding(cfg: any, persist: boolean = false): void {
       return stratum.pools.find(p => p.active) ?? stratum.pools[0] ?? {} as any;
     }
     return stratum.pools[i] ?? {} as any;
+  }
+
+  // All pools reported by the manager (dual mode drives 1..MAX_POOLS of them).
+  public get dashboardPools(): IDashboardV2Pool[] {
+    return this._info?.stratum?.pools ?? [];
+  }
+  public get poolCount(): number {
+    return this.dashboardPools.length;
   }
 
   private clearChartHistoryInternal(updateChartNow: boolean): void {

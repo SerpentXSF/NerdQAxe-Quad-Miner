@@ -52,8 +52,12 @@ export interface IDashboardV2Thermal {
 export interface IDashboardV2Pool {
     active?: boolean;       // pool is currently mining (failover: the selected one)
     host: string;
+    url?: string;           // same as host (from the stratum manager)
     port: number;
     user: string;
+    weight?: number;        // configured scheduling weight (percent)
+    hashRate?: number;      // live share of the device hashrate (GH/s)
+    allocation?: number;    // percent of hashrate allocated to this pool
     connected: boolean;
     activeProtocol: number;
     encrypted: boolean;
