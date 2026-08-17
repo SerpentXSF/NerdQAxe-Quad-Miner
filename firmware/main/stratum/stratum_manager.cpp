@@ -33,8 +33,8 @@
 // ------------  stratum manager
 
 // How many pools to drive. DUAL counts contiguously-configured pools (a pool is
-// "configured" when its host is non-empty), floored at 2 so the classic 2-slot
-// layout is preserved even when the fallback URL is blank. FAILOVER stays at 2.
+// "configured" when its host is non-empty), floored at 1 so a user can mine a
+// single pool. FAILOVER stays at 2 (primary + fallback slots).
 int StratumManager::computeNumPools()
 {
     if (m_poolmode != PoolMode::DUAL) {
@@ -48,7 +48,7 @@ int StratumManager::computeNumPools()
         if (!has) break; // pools must be configured contiguously from index 0
         n++;
     }
-    return (n < 2) ? 2 : n;
+    return (n < 1) ? 1 : n;
 }
 
 StratumManager::StratumManager(PoolMode poolmode) : m_poolmode(poolmode)

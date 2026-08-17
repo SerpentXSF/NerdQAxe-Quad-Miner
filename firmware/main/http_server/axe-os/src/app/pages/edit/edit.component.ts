@@ -145,8 +145,9 @@ export class EditComponent implements OnInit {
   }
 
   public removePool(i: number): void {
-    // Keep at least primary + fallback (matches the firmware's 2-slot floor).
-    if (this.poolsArray.length <= 2) return;
+    // Allow down to a single pool (mine to just one). Failover mode still needs
+    // a fallback, but the firmware keeps a harmless empty second slot for that.
+    if (this.poolsArray.length <= 1) return;
     this.poolsArray.removeAt(i);
     this.showPoolPassword.splice(i, 1);
     this.lastCoinbaseVerifyMode.splice(i, 1);

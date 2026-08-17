@@ -80,8 +80,8 @@ esp_err_t GET_V2_settings(httpd_req_t *req)
     {
         JsonArray pools = doc["pools"].to<JsonArray>();
 
-        // Number of configured pools = contiguous non-empty URLs, floored at 2
-        // (primary + fallback always shown). Mirrors StratumManager's boot count.
+        // Number of configured pools = contiguous non-empty URLs, floored at 1 so
+        // the UI reflects a single-pool setup. Mirrors StratumManager's boot count.
         int numPools = 0;
         for (int i = 0; i < MAX_POOLS; i++) {
             char *u = Config::getPoolURL(i);
@@ -90,7 +90,7 @@ esp_err_t GET_V2_settings(httpd_req_t *req)
             if (!has) break;
             numPools++;
         }
-        if (numPools < 2) numPools = 2;
+        if (numPools < 1) numPools = 1;
 
         for (int i = 0; i < numPools; i++) {
             JsonObject pool = pools.add<JsonObject>();

@@ -152,6 +152,6 @@ class StratumManagerDualPool : public StratumManager {
     }
 
     virtual int getCompatPingPoolIndex() {
-        return (m_balance >= 50) ? 0 : 1;
+        return (m_balance >= 50 || m_numPools < 2) ? 0 : 1;
     }
 };

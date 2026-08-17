@@ -282,6 +282,10 @@ void StratumManagerDualPool::getManagerInfoJson(JsonObject &obj)
         pool["port"]   = m_stratumConfig[i] ? m_stratumConfig[i]->getPort() : 0;
         pool["user"]   = m_stratumConfig[i] ? m_stratumConfig[i]->getUser() : "";
         pool["weight"] = poolWeight(i);
+        // Live share of the device hashrate this pool is receiving (GH/s), and
+        // the percent allocation it maps to among the connected pools.
+        pool["hashRate"]   = getActivePoolHashrate(i);
+        pool["allocation"] = getActivePoolBalance(i);
 
         pool["connected"] = m_stratumTasks[i] ? m_stratumTasks[i]->m_isConnected : false;
         pool["verifyBlocked"] = getVerifyBlockedReason(i) ? getVerifyBlockedReason(i) : "";
