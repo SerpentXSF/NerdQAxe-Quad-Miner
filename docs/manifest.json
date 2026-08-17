@@ -6,10 +6,11 @@
     {
       "chipFamily": "ESP32-S3",
       "parts": [
-        {
-          "path": "https://github.com/SerpentXSF/NerdQAxe-Quad-Miner/releases/download/v0.1.1/nerdqaxe-quad-miner-factory-v0.1.1.bin",
-          "offset": 0
-        }
+        { "path": "./firmware/bootloader.bin", "offset": 0 },
+        { "path": "./firmware/partition-table.bin", "offset": 32768 },
+        { "path": "./firmware/esp-miner.bin", "offset": 65536 },
+        { "path": "./firmware/www.bin", "offset": 4259840 },
+        { "path": "./firmware/ota_data_initial.bin", "offset": 15794176 }
       ]
     }
   ]
