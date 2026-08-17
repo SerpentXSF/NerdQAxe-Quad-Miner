@@ -1,0 +1,16 @@
+{
+  "name": "NerdQAxe Quad Miner",
+  "version": "0.1.1",
+  "new_install_prompt_erase": true,
+  "builds": [
+    {
+      "chipFamily": "ESP32-S3",
+      "parts": [
+        {
+          "path": "https://github.com/SerpentXSF/NerdQAxe-Quad-Miner/releases/download/v0.1.1/nerdqaxe-quad-miner-factory-v0.1.1.bin",
+          "offset": 0
+        }
+      ]
+    }
+  ]
+}
