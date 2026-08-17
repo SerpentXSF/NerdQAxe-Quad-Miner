@@ -167,7 +167,7 @@ esp_err_t GET_V2_dashboard(httpd_req_t *req)
         JsonObject coinbase = doc["coinbase"].to<JsonObject>();
 
         JsonArray blockHeaders = coinbase["blockHeaders"].to<JsonArray>();
-        for (int p = 0; p < 2; p++) {
+        for (int p = 0; p < MAX_POOLS; p++) {
             const coinbase_result_t cb = STRATUM_MANAGER->getCoinbaseResult(p);
             if (cb.block_height > 0) {
                 JsonObject bh = blockHeaders.add<JsonObject>();
@@ -186,7 +186,7 @@ esp_err_t GET_V2_dashboard(httpd_req_t *req)
         }
 
         JsonArray cbPools = coinbase["pools"].to<JsonArray>();
-        for (int p = 0; p < 2; p++) {
+        for (int p = 0; p < MAX_POOLS; p++) {
             JsonObject cp = cbPools.add<JsonObject>();
             cp["mode"]   = Config::getCoinbaseVerifyMode(p);
             cp["maxFee"] = Config::getCoinbaseMaxFee(p) / 10.0f;

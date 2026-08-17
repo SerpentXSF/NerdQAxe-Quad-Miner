@@ -687,6 +687,59 @@ void setPoolWeight(int idx, uint16_t value)
     cfgSetU16(poolKey(key, sizeof(key), NVS_CONFIG_POOL_WEIGHT, idx), value);
 }
 
+// ---- Per-pool coinbase verification (indexed, legacy fallback for pools 0/1) ----
+
+uint16_t getCoinbaseVerifyMode(int pool)
+{
+    char key[24];
+    poolKey(key, sizeof(key), NVS_CONFIG_COINBASE_VERIFY_MODE_N, pool);
+    if (!cfgHasKey(key)) {
+        if (pool == 0) return cfgGetU16(NVS_CONFIG_COINBASE_VERIFY_MODE, 0);
+        if (pool == 1) return cfgGetU16(NVS_CONFIG_FB_COINBASE_VERIFY_MODE, 0);
+    }
+    return cfgGetU16(key, 0);
+}
+
+void setCoinbaseVerifyMode(int pool, uint16_t v)
+{
+    char key[24];
+    cfgSetU16(poolKey(key, sizeof(key), NVS_CONFIG_COINBASE_VERIFY_MODE_N, pool), v);
+}
+
+uint16_t getCoinbaseMaxFee(int pool)
+{
+    char key[24];
+    poolKey(key, sizeof(key), NVS_CONFIG_COINBASE_MAX_FEE_N, pool);
+    if (!cfgHasKey(key)) {
+        if (pool == 0) return cfgGetU16(NVS_CONFIG_COINBASE_MAX_FEE, 30);
+        if (pool == 1) return cfgGetU16(NVS_CONFIG_FB_COINBASE_MAX_FEE, 30);
+    }
+    return cfgGetU16(key, 30);
+}
+
+void setCoinbaseMaxFee(int pool, uint16_t v)
+{
+    char key[24];
+    cfgSetU16(poolKey(key, sizeof(key), NVS_CONFIG_COINBASE_MAX_FEE_N, pool), v);
+}
+
+bool getCoinbaseVerifyForce(int pool)
+{
+    char key[24];
+    poolKey(key, sizeof(key), NVS_CONFIG_COINBASE_VERIFY_FORCE_N, pool);
+    if (!cfgHasKey(key)) {
+        if (pool == 0) return cfgGetU16(NVS_CONFIG_COINBASE_VERIFY_FORCE, 0) != 0;
+        if (pool == 1) return cfgGetU16(NVS_CONFIG_FB_COINBASE_VERIFY_FORCE, 0) != 0;
+    }
+    return cfgGetU16(key, 0) != 0;
+}
+
+void setCoinbaseVerifyForce(int pool, bool v)
+{
+    char key[24];
+    cfgSetU16(poolKey(key, sizeof(key), NVS_CONFIG_COINBASE_VERIFY_FORCE_N, pool), v ? 1 : 0);
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // Legacy migrate_config() — now just calls init()
 // ═══════════════════════════════════════════════════════════════════════════
