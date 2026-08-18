@@ -4,6 +4,14 @@ Open-source firmware for the **NerdQAxe++** (4x BM1370) that mines on **up to fo
 pools at the same time**, with a configurable hashrate split per pool and live
 tuning from the web UI. No paid firmware, no gatekeeping.
 
+> ### ⚠️ Update to v0.1.2 if you flashed v0.1.0 or v0.1.1 with the factory image or web flasher
+> Those builds had a bug where a **full flash** (which wipes saved settings) left the
+> ASICs **unpowered** — the miner booted, joined WiFi, and was reachable in the web UI,
+> but never started hashing (`voltage`/`power` read 0). **v0.1.2 fixes it.** Update over
+> the air, which keeps your config: on the device firmware page upload `esp-miner.bin`
+> then `www.bin` from the
+> [latest release](https://github.com/SerpentXSF/NerdQAxe-Quad-Miner/releases/latest).
+
 It is built on top of the excellent
 [shufps/ESP-Miner-NerdQAxePlus](https://github.com/shufps/ESP-Miner-NerdQAxePlus)
 dual-pool firmware and extends the pool layer from two pools to N.
