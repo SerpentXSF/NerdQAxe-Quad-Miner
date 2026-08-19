@@ -124,10 +124,17 @@ export class SettingsComponent implements OnInit, OnDestroy {
         )
       ),
       tap(list => {
+        // Track the latest stable release so the version-status label can resolve.
+        // The component read this.latestStableRelease but never assigned it, so the
+        // status was stuck on "Unknown". Prefer the flagged latest, else the newest
+        // non-prerelease, else the newest entry.
+        this.latestStableRelease =
+          list.find(r => r.isLatest) ?? list.find(r => !r.prerelease) ?? list[0] ?? null;
         if (!this.selectedRelease || !list.find(r => r.id === this.selectedRelease!.id)) {
           this.selectedRelease = list[0] ?? null;
-          this.updateSelectedReleaseDeps();
         }
+        // Recomputes updateStatus + versionComparison and refreshes selected-release deps.
+        this.updateVersionStatus();
       }),
       shareReplay({ refCount: true, bufferSize: 1 })
     );
@@ -500,9 +507,12 @@ export class SettingsComponent implements OnInit, OnDestroy {
   // settings.component.ts
   public trackRelease = (_: number, r: GithubRelease) => r.id;
 
-  // Helper to build expected factory filename for a given release
+  // Helper to build expected factory filename for a given release.
+  // This fork publishes its factory image as "nerdqaxe-quad-miner-factory-<tag>.bin"
+  // (see README / web flasher), so match that name -- not upstream's
+  // "esp-miner-factory-<model>-<tag>.bin" -- when filtering/installing releases.
   private buildFactoryNameFor(release: GithubRelease): string {
-    return `esp-miner-factory-${this.normalizedModel}-${release.tag_name}.bin`;
+    return `nerdqaxe-quad-miner-factory-${release.tag_name}.bin`;
   }
 
   public getAppVersion() {
