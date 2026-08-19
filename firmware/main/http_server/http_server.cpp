@@ -1,4 +1,6 @@
 
+#include <string.h>
+
 #include "esp_http_server.h"
 #include "esp_log.h"
 #include "esp_timer.h"
@@ -93,7 +95,20 @@ static esp_err_t http_404_error_handler(httpd_req_t *req, httpd_err_code_t err)
     // close connection when out of scope
     ConGuard g(http_server, req);
 
-    // Set status
+    // An unmatched /api/* request (e.g. wrong method, or a request during the boot
+    // window before handlers registered) must NOT redirect to the SPA index.html -- the
+    // browser would cache HTML for a JSON URL and the Angular UI would JSON.parse it and
+    // hang on "Loading...". Return a clean, uncacheable JSON 404 instead.
+    if (strncmp(req->uri, "/api/", 5) == 0) {
+        ESP_LOGW(TAG, "unmatched api path (404 handler): %s -> 404", req->uri);
+        set_cors_headers(req);  // also sets Cache-Control: no-store
+        httpd_resp_set_status(req, "404 Not Found");
+        httpd_resp_set_type(req, "application/json");
+        httpd_resp_send(req, "{\"error\":\"not found\"}", HTTPD_RESP_USE_STRLEN);
+        return ESP_OK;
+    }
+
+    // Non-API request -> redirect to "/" so the Angular SPA router handles the route.
     httpd_resp_set_status(req, "302 Temporary Redirect");
     // Redirect to the "/" root directory
     httpd_resp_set_hdr(req, "Location", "/");
