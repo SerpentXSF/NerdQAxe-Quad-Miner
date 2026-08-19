@@ -41,8 +41,12 @@ export enum UpdateStatus {
 })
 export class GithubUpdateService {
 
+  // This is a fork (NerdQAxe Quad Miner). Point the in-UI update checker at OUR
+  // releases so the settings panel reports our version (not upstream's), and so
+  // "Install from GitHub" flashes OUR firmware -- flashing an upstream image would
+  // wipe the dual-pool fork.
   private readonly baseReleasesUrl =
-    'https://api.github.com/repos/shufps/ESP-Miner-NerdQAxePlus/releases';
+    'https://api.github.com/repos/SerpentXSF/NerdQAxe-Quad-Miner/releases';
 
   constructor(
     private httpClient: HttpClient
