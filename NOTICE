@@ -1,0 +1,55 @@
+NerdQAxe Quad Miner
+Copyright (C) 2025-2026 SerpentX  (https://github.com/SerpentXSF)
+
+This program is free software: you can redistribute it and/or modify it under
+the terms of the GNU General Public License version 3, as published by the Free
+Software Foundation. See the LICENSE file for the full license text.
+
+--------------------------------------------------------------------------------
+Derivative work / upstream attribution
+--------------------------------------------------------------------------------
+
+This repository is a DERIVATIVE WORK built on the following upstream GPL-3.0
+project. The upstream copyright notice and license file are preserved unmodified
+at firmware/LICENSE:
+
+  ESP-Miner-NerdQAxePlus   Copyright (C) shufps and contributors — GNU GPL v3.0
+                           https://github.com/shufps/ESP-Miner-NerdQAxePlus
+                           (itself a fork of ESP-Miner,
+                           Copyright (C) The Bitaxe project / bitaxeorg (Skot)
+                           and contributors — GNU GPL v3.0,
+                           https://github.com/bitaxeorg/ESP-Miner)
+
+--------------------------------------------------------------------------------
+Bundled third-party components (retain their own, separate licenses)
+--------------------------------------------------------------------------------
+
+This firmware uses third-party components that are NOT GPL and keep their own
+licenses; the GPL-3.0 grant above does not relicense them:
+
+  firmware/components/libsecp256k1/   secp256k1 — Copyright (C) Pieter Wuille,
+                                      Andrew Poelstra, and contributors — MIT
+                                      license. Vendored in-tree; see that
+                                      directory's COPYING.
+  firmware/managed_components/        ESP-IDF managed components (Espressif and
+                                      others), fetched at build time (not stored
+                                      in this repo) — their respective licenses.
+
+--------------------------------------------------------------------------------
+Statement of changes (GPL-3.0 section 5a)
+--------------------------------------------------------------------------------
+
+Modifications by SerpentX (2025-2026), also licensed under GNU GPL v3.0, extend
+the pool layer from two pools to up to four, with a configurable per-pool
+weighted hashrate split and live web-UI tuning. The complete, dated list of
+changes is the git commit history of this repository.
+
+--------------------------------------------------------------------------------
+Trademarks
+--------------------------------------------------------------------------------
+
+"NerdQAxe" and "NerdAxe" are names used by their upstream project and its author.
+This repository is an independent, community-maintained fork and is NOT
+affiliated with, sponsored by, or endorsed by that project or its author. The
+names are used solely to identify the hardware this firmware runs on (nominative
+use).

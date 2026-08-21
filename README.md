@@ -155,4 +155,13 @@ curl -X PATCH http://<device-ip>/api/v2/settings \
 
 ## License
 
-GPL-3.0, inherited from ESP-Miner. See [firmware/LICENSE](firmware/LICENSE).
+GPL-3.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
+
+This is a derivative work of
+[shufps/ESP-Miner-NerdQAxePlus](https://github.com/shufps/ESP-Miner-NerdQAxePlus)
+(GPL-3.0), itself a fork of
+[bitaxeorg/ESP-Miner](https://github.com/bitaxeorg/ESP-Miner) (GPL-3.0). The
+upstream license text is preserved at [firmware/LICENSE](firmware/LICENSE), and
+bundled third-party components (e.g. `libsecp256k1`, MIT) keep their own
+licenses. See [NOTICE](NOTICE) for the full attribution and the statement of
+changes.
