@@ -19,7 +19,19 @@
 #include "macros.h"
 #include "psram_allocator.h"
 
-#define GITHUB_REPO "https://github.com/shufps/"
+// Allowlist for "Install from GitHub". This is a security control, not a
+// convenience setting: the endpoint takes a URL from the client and flashes
+// whatever it finds there, so anything outside this prefix must be refused.
+//
+// It previously pointed at the upstream shufps org, which was correct before
+// this fork existed. When the update panel was repointed to this repository the
+// frontend started sending SerpentXSF asset URLs while this check still only
+// trusted shufps ones, so every "Install from GitHub" failed with 400 "Invalid
+// or unsafe URL" - the frontend half of the repoint shipped without this half.
+//
+// Pinned to the full repository path rather than just the org, so that another
+// repository under the same owner still cannot be used as a firmware source.
+#define GITHUB_REPO "https://github.com/SerpentXSF/NerdQAxe-Quad-Miner/"
 
 #define FW_START 0x10000
 #define FW_LEN_MB 4
@@ -491,7 +503,7 @@ void FactoryOTAUpdate::task()
     }
 }
 
-// --- Helper: validate URL is a safe GitHub link to shufps repo
+// --- Helper: validate the URL is a safe GitHub link to THIS fork's repo
 static bool is_safe_github_url(const char *url)
 {
     if (!url)
