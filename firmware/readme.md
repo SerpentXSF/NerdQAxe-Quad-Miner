@@ -1,3 +1,16 @@
+> **Note — this is upstream's readme, kept for reference.**
+>
+> You are looking at the firmware source inside **NerdQAxe Quad Miner**, a
+> GPL-3.0 fork of [shufps/ESP-Miner-NerdQAxePlus](https://github.com/shufps/ESP-Miner-NerdQAxePlus)
+> that mines up to **four pools at once**. The links, releases, flasher and
+> Discord below belong to the **upstream** project and will give you *stock*
+> NerdOS, not this fork.
+>
+> For this fork, use the [top-level README](../README.md), the
+> [SerpentXSF releases](https://github.com/SerpentXSF/NerdQAxe-Quad-Miner/releases)
+> and the [Web Flasher](https://serpentxsf.github.io/NerdQAxe-Quad-Miner/).
+> Please report issues here, not to upstream.
+
 [![](https://dcbadge.vercel.app/api/server/3E8ca2dkcC)](https://discord.gg/3E8ca2dkcC)
 
 # ESP-Miner-Nerdaxe version

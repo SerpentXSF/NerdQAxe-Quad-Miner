@@ -4,11 +4,11 @@ Open-source firmware for the **NerdQAxe++** (4x BM1370) that mines on **up to fo
 pools at the same time**, with a configurable hashrate split per pool and live
 tuning from the web UI. No paid firmware, no gatekeeping.
 
-> ### ⚠️ Update to v0.1.2 if you flashed v0.1.0 or v0.1.1 with the factory image or web flasher
+> ### ⚠️ Update to v0.1.2 or later if you flashed v0.1.0 or v0.1.1 with the factory image or web flasher
 > Those builds had a bug where a **full flash** (which wipes saved settings) left the
 > ASICs **unpowered** — the miner booted, joined WiFi, and was reachable in the web UI,
 > but never started hashing (`voltage`/`power` read 0). **v0.1.2 fixes it.** Update over
-> the air, which keeps your config: on the device firmware page upload `esp-miner.bin`
+> the air, which keeps your config: on the device firmware page upload `esp-miner-NerdQAxe++.bin`
 > then `www.bin` from the
 > [latest release](https://github.com/SerpentXSF/NerdQAxe-Quad-Miner/releases/latest).
 
@@ -24,8 +24,8 @@ dual-pool firmware and extends the pool layer from two pools to N.
   Only the ratios matter, so any split works.
 - **Live retuning.** Weight changes apply immediately with no reboot. Only adding
   or removing a pool needs a restart.
-- **No hashrate loss.** The full ~6.3 TH/s of a NerdQAxe++ is preserved; the pools
-  are time-sliced at the job level.
+- **No hashrate loss.** The board's full hashrate is preserved (~4.7 TH/s stock,
+  more if you tune it); the pools are time-sliced at the job level.
 - **Web UI.** The settings page has a dynamic pool list: add, remove, and reorder
   pools, set each one's host/port/user/password and weight.
 
@@ -48,29 +48,39 @@ to a single pool for a true per-chip split.
 
 ## Build
 
-Requires ESP-IDF v5.3.x. A container is the easiest route:
+Requires ESP-IDF v5.3.x **and Node.js** — the web UI is built from
+`firmware/main/http_server/axe-os` as part of the firmware build. The repo ships
+a container with both, which is the easiest route:
 
 ```
-docker run --rm -e BOARD=NERDQAXEPLUS2 \
-  -v "<path-to>/firmware:/project" \
-  espressif/idf:v5.3.3 \
-  bash -lc 'cd /project && idf.py build'
+cd firmware/docker && ./build_docker.sh   # ESP-IDF 5.3.3 + Node 20
+cd .. && ./docker/idf.sh build            # BOARD defaults to NERDQAXEPLUS2
 ```
 
-The web UI is built automatically from `firmware/main/http_server/axe-os` during
-the firmware build (it needs Node.js if you build outside the container).
+Stock `espressif/idf` images do **not** include Node, so building with one fails
+at `npm is not found!`.
 
 Outputs: `firmware/build/esp-miner.bin` (app) and `firmware/build/www.bin` (web UI).
 
 ## Update (most people)
 
 If your NerdQAxe++ already runs this firmware (or any NerdQAxe firmware), the easy
-path is an **over-the-air update** — no cable, and your pool config is kept. On the
-device web UI's firmware update page, upload from the
+path is an **over-the-air update** — no cable, and your pool config is kept.
+
+**Easiest — from the device itself:** open the web UI and go to **Settings →
+Release & Update**, then use **Install from GitHub** to pull the latest release
+straight onto the miner. Nothing to download by hand.
+
+**Or upload the files yourself:** on the device web UI's firmware update page,
+upload from the
 [latest release](https://github.com/SerpentXSF/NerdQAxe-Quad-Miner/releases/latest):
 
-- `esp-miner.bin` — the firmware
+- `esp-miner-NerdQAxe++.bin` — the firmware
 - `www.bin` — the web UI (upload this too so the site matches the firmware)
+
+The device validates these filenames exactly, so upload them under the names
+above — renaming them (or picking `esp-miner-v0.1.5.bin`) makes the update page
+reject the file.
 
 ## Flash a fresh device
 
@@ -126,7 +136,7 @@ your saved config. If esptool stalls on the ESP32-S3 USB-Serial/JTAG port, add
 
 ## Configure your pools
 
-Open the device web UI and go to **Settings**. Set **Pool mode** to **Dual** to
+Open the device web UI and go to **Settings**. Set **Pool mode** to **Dual Pool** to
 mine several pools at once, then use **Add Pool** / **Remove** to pick how many you
 want: **1, 2, 3, or 4 pools**. Fill in each pool's host, port, and user, and (for
 3+ pools) set a **weight** per pool to split the hashrate. Save. Weight changes
