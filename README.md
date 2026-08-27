@@ -79,8 +79,8 @@ upload from the
 - `www.bin` — the web UI (upload this too so the site matches the firmware)
 
 The device validates these filenames exactly, so upload them under the names
-above — renaming them (or picking `esp-miner-v0.1.5.bin`) makes the update page
-reject the file.
+above — renaming them (or picking the `esp-miner-<version>.bin` asset) makes the
+update page reject the file.
 
 ## Flash a fresh device
 
