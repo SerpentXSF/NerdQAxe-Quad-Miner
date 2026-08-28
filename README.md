@@ -163,6 +163,28 @@ curl -X PATCH http://<device-ip>/api/v2/settings \
 - [shufps/ESP-Miner-NerdQAxePlus](https://github.com/shufps/ESP-Miner-NerdQAxePlus) - the NerdQAxe firmware this is based on.
 - The Bitaxe / ESP-Miner project and the NerdAxe community.
 
+## Support this project
+
+Everything here is free and open source under GPL-3.0, and it stays that way -
+there is no paid tier and nothing is held back. If it has been useful to you and
+you want to say thanks, it is very much appreciated. Please never feel obliged.
+
+**Bitcoin** (on-chain)
+
+```
+bc1qeepmx84606m0fphpuvlcafz9ukfmgyrlxjkt72
+```
+
+**USDC** - **Solana network only**
+
+```
+JAY1A2kXYY8jLzedyXFxJMoPZ5hS6Ja9K2qDPtx64Lbs
+```
+
+> Send USDC on the **Solana** network only. USDC sent to this address over
+> Ethereum, Polygon, or any other chain will be **permanently lost** - that is
+> how the networks work and it cannot be reversed.
+
 ## License
 
 GPL-3.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
