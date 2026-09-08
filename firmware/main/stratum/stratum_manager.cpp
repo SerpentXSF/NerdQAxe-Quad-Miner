@@ -441,24 +441,13 @@ void StratumManager::saveSettings(const JsonDocument &doc) {
     // position = pool index). Writes the indexed NVS keys so pools 2..MAX_POOLS-1
     // can be configured. Pools 0/1 stay compatible with the flat legacy keys
     // handled above — an empty object at position 0/1 leaves them untouched.
-    // A field is only written when present, so partial updates are fine.
+    // A field is only written when present, so partial updates are fine. Also
+    // clears any slot the incoming array no longer covers, so a removed pool
+    // doesn't linger as a stale, still-mined entry (see Config::applyPoolsJson).
     // NOTE: the number of pools actually driven (m_numPools) is recomputed at
     // boot, so adding/removing a pool needs a restart to take effect.
     if (doc["pools"].is<JsonArrayConst>()) {
-        JsonArrayConst pools = doc["pools"].as<JsonArrayConst>();
-        int idx = 0;
-        for (JsonObjectConst p : pools) {
-            if (idx >= MAX_POOLS) break;
-            if (p["url"].is<const char*>())             Config::setPoolURL(idx, p["url"].as<const char*>());
-            if (p["port"].is<uint16_t>())               Config::setPoolPort(idx, p["port"].as<uint16_t>());
-            if (p["user"].is<const char*>())            Config::setPoolUser(idx, p["user"].as<const char*>());
-            if (p["password"].is<const char*>())        Config::setPoolPass(idx, p["password"].as<const char*>());
-            if (p["tls"].is<bool>())                    Config::setPoolTLS(idx, p["tls"].as<bool>());
-            if (p["enonceSubscribe"].is<bool>())        Config::setPoolEnonceSub(idx, p["enonceSubscribe"].as<bool>());
-            if (p["protocol"].is<uint16_t>())           Config::setPoolProtocol(idx, p["protocol"].as<uint16_t>());
-            if (p["weight"].is<uint16_t>())             Config::setPoolWeight(idx, p["weight"].as<uint16_t>());
-            idx++;
-        }
+        Config::applyPoolsJson(doc["pools"].as<JsonArrayConst>());
     }
 }
 
@@ -655,7 +644,7 @@ void StratumManager::checkForFoundBlock(int pool, double diff, uint32_t nbits)
     double networkDiff = calculateNetworkDifficulty(nbits);
 /*
     ESP_LOGI(m_tag, "(%s) block check: nonce_diff=%.2e network_diff=%.2e nBits=0x%08lX",
-             pool ? "Sec" : "Pri", diff, networkDiff, (unsigned long)nbits);
+             poolLabel(pool), diff, networkDiff, (unsigned long)nbits);
 */
     if (diff <= networkDiff) {
         return;

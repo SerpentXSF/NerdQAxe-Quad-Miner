@@ -4,6 +4,11 @@
 
 #include <stdint.h>
 
+// applyPoolsJson() below takes JsonArrayConst, so this header needs the real
+// types rather than asking every one of its ~40 includers to bring its own
+// copy in first.
+#include "ArduinoJson.h"
+
 // Maximum number of pools the miner can drive at once. Single source of truth,
 // also consumed by stratum_manager.h (poolIndex) and the indexed pool accessors
 // below. 2 = classic primary+fallback / dual-pool; 4 for the quad-pool work.
@@ -365,6 +370,19 @@ namespace Config {
     // Used for the N>2 case; the 2-pool split still uses the poolBalance slider.
     uint16_t getPoolWeight(int idx);
     void     setPoolWeight(int idx, uint16_t value);
+
+    // Applies an incoming pools[] JSON array (array position = pool index) to NVS.
+    // Shared by both pools[] writers (PATCH /api/v2/settings and
+    // StratumManager::saveSettings) so they can't drift apart. Writes every field
+    // present in each pool object - same "only touch what's present" behaviour the
+    // callers had - then clears every slot from pools.size() to MAX_POOLS-1, so a
+    // pool removed from the incoming array doesn't linger as a stale NVS entry:
+    // computeNumPools() (stratum_manager.cpp) counts contiguous non-empty pool URLs
+    // from index 0, so a leftover slot would otherwise be mined as a live pool.
+    // verifyChanged, if non-null, must point to a MAX_POOLS-sized bool array; it is
+    // set true for any pool whose coinbase-verify settings changed (written or
+    // cleared) so the caller can re-run verification for just those pools.
+    void applyPoolsJson(JsonArrayConst pools, bool *verifyChanged = nullptr);
 
     // ---- Boolean Setters ----
     inline void setFlipScreen(bool value) { cfgSetU16(NVS_CONFIG_FLIP_SCREEN, value ? 1 : 0); }

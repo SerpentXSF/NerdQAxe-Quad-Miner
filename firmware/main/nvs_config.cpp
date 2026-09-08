@@ -1,5 +1,6 @@
 #include <string.h>
 #include <stdio.h>
+#include <math.h>
 
 #include "esp_log.h"
 #include "nvs.h"
@@ -738,6 +739,74 @@ void setCoinbaseVerifyForce(int pool, bool v)
 {
     char key[24];
     cfgSetU16(poolKey(key, sizeof(key), NVS_CONFIG_COINBASE_VERIFY_FORCE_N, pool), v ? 1 : 0);
+}
+
+// See the declaration in nvs_config.h for why this exists: it used to be two
+// separate loops (HTTP settings PATCH and StratumManager::saveSettings) that
+// only ever wrote pools 0..pools.size()-1, so removing a pool left its old
+// slot behind in NVS as a live, still-mined pool.
+void applyPoolsJson(JsonArrayConst pools, bool *verifyChanged)
+{
+    int n = (int) pools.size();
+    if (n > MAX_POOLS) n = MAX_POOLS;
+
+    // An empty array is refused rather than obeyed, because clearing slot 0 is
+    // not recoverable: getPoolURL(0) falls back to the legacy flat stratumurl
+    // key only when the indexed key is ABSENT, so writing "" to stratumurl0
+    // shadows the legacy value permanently - and the password is gone for good,
+    // since the settings API never returns it. A miner with no pools at all is
+    // not a configuration anyone wants (computeNumPools() floors to 1 anyway),
+    // so treat it as a malformed request and leave NVS untouched. The stock UI
+    // cannot produce this, but a third-party client or a hand-rolled PATCH can.
+    if (n == 0) {
+        return;
+    }
+
+    for (int i = 0; i < n; i++) {
+        JsonObjectConst pool = pools[i].as<JsonObjectConst>();
+
+        if (pool["url"].is<const char*>())                setPoolURL(i, pool["url"].as<const char*>());
+        if (pool["port"].is<uint16_t>())                  setPoolPort(i, pool["port"].as<uint16_t>());
+        if (pool["user"].is<const char*>())               setPoolUser(i, pool["user"].as<const char*>());
+        if (pool["password"].is<const char*>())           setPoolPass(i, pool["password"].as<const char*>());
+        if (pool["enonceSubscribe"].is<bool>())           setPoolEnonceSub(i, pool["enonceSubscribe"].as<bool>());
+        if (pool["tls"].is<bool>())                       setPoolTLS(i, pool["tls"].as<bool>());
+        if (pool["protocol"].is<uint16_t>())              setPoolProtocol(i, pool["protocol"].as<uint16_t>());
+        if (pool["sv2AuthorityPubkey"].is<const char*>()) setPoolSV2AuthorityPubkey(i, pool["sv2AuthorityPubkey"].as<const char*>());
+        if (pool["sv2ChannelType"].is<uint16_t>())        setPoolSV2ChannelType(i, pool["sv2ChannelType"].as<uint16_t>());
+        if (pool["weight"].is<uint16_t>())                setPoolWeight(i, pool["weight"].as<uint16_t>());
+
+        // Coinbase verification (per pool, indexed storage).
+        if (pool["coinbaseVerifyMode"].is<uint16_t>()) {
+            uint16_t v = pool["coinbaseVerifyMode"].as<uint16_t>();
+            if (verifyChanged && getCoinbaseVerifyMode(i) != v) verifyChanged[i] = true;
+            setCoinbaseVerifyMode(i, v);
+        }
+        if (pool["coinbaseMaxFee"].is<float>()) {
+            uint16_t v = (uint16_t) roundf(pool["coinbaseMaxFee"].as<float>() * 10.0f);
+            if (verifyChanged && getCoinbaseMaxFee(i) != v) verifyChanged[i] = true;
+            setCoinbaseMaxFee(i, v);
+        }
+        if (pool["coinbaseVerifyForce"].is<bool>()) {
+            bool v = pool["coinbaseVerifyForce"].as<bool>();
+            if (verifyChanged && getCoinbaseVerifyForce(i) != v) verifyChanged[i] = true;
+            setCoinbaseVerifyForce(i, v);
+        }
+    }
+
+    // Clear every slot the incoming array didn't cover - a removed pool would
+    // otherwise stay live in NVS and get mined a second time (double weight,
+    // its share counters split across two rows) since computeNumPools() just
+    // counts contiguous non-empty pool URLs from index 0.
+    for (int j = n; j < MAX_POOLS; j++) {
+        setPoolURL(j, "");
+        setPoolUser(j, "");
+        setPoolPass(j, "");
+        setPoolPort(j, 0);
+        setPoolWeight(j, 25); // matches the default in getPoolWeight() above
+        if (verifyChanged && getCoinbaseVerifyMode(j) != 0) verifyChanged[j] = true;
+        setCoinbaseVerifyMode(j, 0);
+    }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

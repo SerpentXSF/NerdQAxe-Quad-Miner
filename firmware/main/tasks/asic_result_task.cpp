@@ -95,7 +95,7 @@ void ASIC_result_task(void *pvParameters)
         char bestDiffString[16];
         suffixString(STRATUM_MANAGER->getBestSessionDiff(), bestDiffString, sizeof(bestDiffString), 3);
 
-        const char *pool_str = job->pool_id ? "Sec" : "Pri";
+        const char *pool_str = poolLabel(job->pool_id);
 
         // log the ASIC response, including pool and best session difficulty using human-readable SI formatting
         // we only show responses >= maxAsicDifficulty to avoid spamming the log

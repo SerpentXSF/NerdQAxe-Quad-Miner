@@ -296,7 +296,7 @@ static void handle_nonce(Board *board, uint8_t slave_id, const uint8_t *buf, siz
 
     double nonce_diff = test_nonce_value(job, nonce, rolled_version);
 
-    const char *pool_str = job->pool_id ? "Sec" : "Pri";
+    const char *pool_str = poolLabel(job->pool_id);
 
     ESP_LOGI(TAG, "(%s) slave=%d job=%02X nonce=%08" PRIX32 " diff=%.1f/pool=%lu/asic=%lu",
              pool_str, slave_id, job_id, nonce,

@@ -41,10 +41,14 @@
 StratumTaskBase::StratumTaskBase(StratumManager *manager, int index)
     : m_manager(manager), m_index(index)
 {
-    if (!index) {
-        m_tag = "stratum task (Pri)";
-    } else {
-        m_tag = "stratum task (Sec)";
+    // Per-pool tag - used to be a Pri/Sec ternary, which made every task past
+    // index 0 log as "(Sec)" and impossible to attribute in a field report.
+    switch (index) {
+        case 0:  m_tag = "stratum task (P0)"; break;
+        case 1:  m_tag = "stratum task (P1)"; break;
+        case 2:  m_tag = "stratum task (P2)"; break;
+        case 3:  m_tag = "stratum task (P3)"; break;
+        default: m_tag = "stratum task (P?)"; break;
     }
 
     m_config = new StratumConfig(index);

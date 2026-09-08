@@ -345,7 +345,7 @@ void create_jobs_task(void *pvParameters)
 
         // select pool to mine for
         active_pool = STRATUM_MANAGER->getNextActivePool();
-        active_pool_str = active_pool ? "Sec" : "Pri";
+        active_pool_str = poolLabel(active_pool);
 
         { // scope for mutex
             PThreadGuard g(current_stratum_job_mutex);

@@ -1,6 +1,5 @@
 #include "handler_v2_settings.h"
 
-#include <math.h>
 #include <string.h>
 #include "esp_ota_ops.h"
 #include "esp_http_server.h"
@@ -299,37 +298,7 @@ esp_err_t PATCH_V2_settings(httpd_req_t *req)
     bool verifyChanged[MAX_POOLS] = {};
 
     if (doc["pools"].is<JsonArray>()) {
-        JsonArray pools = doc["pools"].as<JsonArray>();
-
-        for (int i = 0; i < (int)pools.size() && i < MAX_POOLS; i++) {
-            JsonObject pool = pools[i].as<JsonObject>();
-
-            if (pool["url"].is<const char*>())             Config::setPoolURL(i, pool["url"].as<const char*>());
-            if (pool["port"].is<uint16_t>())               Config::setPoolPort(i, pool["port"].as<uint16_t>());
-            if (pool["user"].is<const char*>())            Config::setPoolUser(i, pool["user"].as<const char*>());
-            if (pool["password"].is<const char*>())        Config::setPoolPass(i, pool["password"].as<const char*>());
-            if (pool["enonceSubscribe"].is<bool>())        Config::setPoolEnonceSub(i, pool["enonceSubscribe"].as<bool>());
-            if (pool["tls"].is<bool>())                    Config::setPoolTLS(i, pool["tls"].as<bool>());
-            if (pool["protocol"].is<uint16_t>())           Config::setPoolProtocol(i, pool["protocol"].as<uint16_t>());
-            if (pool["sv2AuthorityPubkey"].is<const char*>()) Config::setPoolSV2AuthorityPubkey(i, pool["sv2AuthorityPubkey"].as<const char*>());
-            if (pool["sv2ChannelType"].is<uint16_t>())     Config::setPoolSV2ChannelType(i, pool["sv2ChannelType"].as<uint16_t>());
-            if (pool["weight"].is<uint16_t>())             Config::setPoolWeight(i, pool["weight"].as<uint16_t>());
-
-            // Coinbase verification (per pool, indexed storage).
-            if (pool["coinbaseVerifyMode"].is<uint16_t>()) {
-                verifyChanged[i] |= Config::getCoinbaseVerifyMode(i) != pool["coinbaseVerifyMode"].as<uint16_t>();
-                Config::setCoinbaseVerifyMode(i, pool["coinbaseVerifyMode"].as<uint16_t>());
-            }
-            if (pool["coinbaseMaxFee"].is<float>()) {
-                uint16_t newVal = (uint16_t)roundf(pool["coinbaseMaxFee"].as<float>() * 10.0f);
-                verifyChanged[i] |= Config::getCoinbaseMaxFee(i) != newVal;
-                Config::setCoinbaseMaxFee(i, newVal);
-            }
-            if (pool["coinbaseVerifyForce"].is<bool>()) {
-                verifyChanged[i] |= Config::getCoinbaseVerifyForce(i) != pool["coinbaseVerifyForce"].as<bool>();
-                Config::setCoinbaseVerifyForce(i, pool["coinbaseVerifyForce"].as<bool>());
-            }
-        }
+        Config::applyPoolsJson(doc["pools"].as<JsonArrayConst>(), verifyChanged);
     }
 
     // Re-run verification for changed pools

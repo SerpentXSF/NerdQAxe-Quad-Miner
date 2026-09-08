@@ -48,6 +48,9 @@ void StratumManagerDualPool::disconnectedCallback(int index)
     PThreadGuard lock(m_mutex);
     create_job_invalidate(index);
     m_stratumTasks[index]->m_validNotify = false;
+    // Drop the stale difficulty so a dead/reconfigured pool can't keep dragging
+    // selectAsicDiff()'s minimum down, or linger in the API as a live reading.
+    m_poolDifficulty[index] = 0;
     m_stratumTasks[index]->startReconnectTimer();
 }
 
@@ -145,8 +148,6 @@ uint32_t StratumManagerDualPool::selectAsicDiff(int pool, uint32_t poolDiff)
     uint32_t asicMax = board->getAsicMaxDifficulty();
     uint32_t asicMin = board->getAsicMinDifficultyDualPool();
 
-    static uint32_t poolDiffs[MAX_POOLS] = {0xffffffffu, 0xffffffffu, 0xffffffffu, 0xffffffffu};
-
     // shouldn't happen
     if (pool < 0 || pool >= MAX_POOLS) {
         return asicMax;
@@ -154,18 +155,29 @@ uint32_t StratumManagerDualPool::selectAsicDiff(int pool, uint32_t poolDiff)
 
     m_poolDiffErr[pool] = poolDiff < asicMin;
 
-    poolDiffs[pool] = poolDiff;
+    m_poolDifficulty[pool] = poolDiff;
 
     // ASIC difficulty must satisfy every pool we actually send work to -> take
-    // the min over pools with a positive weight (a zero-weight pool gets no jobs,
-    // so its difficulty must not drag the ASIC target down).
+    // the min over pools that are actually active right now: weighted, and
+    // connected with valid work (same test getNextActivePool() uses). Otherwise
+    // a pool that disconnected or got reconfigured would keep contributing its
+    // old difficulty to this minimum forever.
     uint32_t minDiff = 0xffffffffu;
     for (int i = 0; i < m_numPools; i++) {
         if (poolWeight(i) <= 0) continue;
-        minDiff = std::min(minDiff, poolDiffs[i]);
+        bool valid = m_stratumTasks[i] && m_stratumTasks[i]->m_validNotify && !isVerifyBlocked(i);
+        if (!valid) continue;
+        // 0 means "has not reported a difficulty yet" - either no set_difficulty
+        // has arrived, or disconnectedCallback() zeroed it and the pool has since
+        // sent a notify. Letting that through would drive minDiff to 0 and clamp
+        // the ASIC to asicMin, flooding us with low-difficulty nonces. The static
+        // table this replaced started at 0xffffffff, which skipped such pools for
+        // free; m_poolDifficulty[] starts at 0, so the skip has to be explicit.
+        if (m_poolDifficulty[i] == 0) continue;
+        minDiff = std::min(minDiff, m_poolDifficulty[i]);
     }
     if (minDiff == 0xffffffffu) {
-        return asicMax; // no weighted pool reported a diff yet
+        return asicMax; // no weighted, active pool reported a diff yet
     }
 
     // clamp to ASIC range

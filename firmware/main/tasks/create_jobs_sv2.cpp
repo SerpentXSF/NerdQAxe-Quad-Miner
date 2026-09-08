@@ -37,7 +37,7 @@ void create_job_sv2_standard(int pool, uint32_t job_id, uint32_t version,
     miningInfo[pool] = s_v2_standard[pool];
 
     ESP_LOGI(TAG, "(%s) SV2 standard job %lu ready, diff=%lu",
-             pool ? "Sec" : "Pri", (unsigned long)job_id, (unsigned long)difficulty);
+             poolLabel(pool), (unsigned long)job_id, (unsigned long)difficulty);
 
     trigger_job_creation();
 }
@@ -67,7 +67,7 @@ void create_job_sv2_extended(int pool, const sv2_ext_job_t *job,
     miningInfo[pool] = s_v2_extended[pool];
 
     ESP_LOGI(TAG, "(%s) SV2 extended job %lu ready, diff=%lu",
-             pool ? "Sec" : "Pri", (unsigned long)job->job_id, (unsigned long)difficulty);
+             poolLabel(pool), (unsigned long)job->job_id, (unsigned long)difficulty);
 
     trigger_job_creation();
 }
@@ -79,7 +79,7 @@ void create_job_sv2_set_difficulty(int pool, uint32_t difficulty)
     if (s_v2_standard[pool]) {
         s_v2_standard[pool]->setDifficulty(difficulty);
         ESP_LOGI(TAG, "(%s) SV2 standard difficulty updated to %lu",
-                 pool ? "Sec" : "Pri", (unsigned long)difficulty);
+                 poolLabel(pool), (unsigned long)difficulty);
         // No trigger - never resend Standard Channel jobs on SetTarget.
         // ASIC keeps mining, new difficulty applies to next pool job.
         return;
@@ -88,7 +88,7 @@ void create_job_sv2_set_difficulty(int pool, uint32_t difficulty)
     if (s_v2_extended[pool]) {
         s_v2_extended[pool]->setDifficulty(difficulty);
         ESP_LOGI(TAG, "(%s) SV2 extended difficulty updated to %lu",
-                 pool ? "Sec" : "Pri", (unsigned long)difficulty);
+                 poolLabel(pool), (unsigned long)difficulty);
         trigger_job_creation();
     }
 }

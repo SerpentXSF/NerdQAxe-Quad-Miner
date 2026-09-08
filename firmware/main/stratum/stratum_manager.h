@@ -30,6 +30,21 @@ static inline int poolIndex(int pool)
     return (pool >= 0 && pool < MAX_POOLS) ? pool : 0;
 }
 
+// "P0".."P3" label for a pool index, for log lines. Used to be a two-way
+// "(Sec)"/"(Pri)" ternary, which made pools 1, 2 and 3 all log as "(Sec)" -
+// indistinguishable in a field report once there are more than two pools.
+// Bounds-checked; an out-of-range index falls back to "P?".
+static inline const char *poolLabel(int pool)
+{
+    switch (pool) {
+        case 0: return "P0";
+        case 1: return "P1";
+        case 2: return "P2";
+        case 3: return "P3";
+        default: return "P?";
+    }
+}
+
 /**
  * @brief StratumManager handles pool selection, connection management, and failover.
  */
