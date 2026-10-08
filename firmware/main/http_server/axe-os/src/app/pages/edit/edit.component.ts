@@ -237,6 +237,14 @@ export class EditComponent implements OnInit {
       port: [p.port ?? 3333, primary ? [Validators.required, ...portValidators] : portValidators],
       user: [p.user ?? '', primary ? [Validators.required] : []],
       password: ['*****'],
+      // The NVS slot this pool was loaded from, or null for one added here.
+      // A password is never returned by the API, so the form cannot resubmit
+      // one the user did not retype - it stays masked and is left out of the
+      // payload. Everything else is resubmitted, so without this tag a reorder
+      // or removal would shift url/user to new slots while the passwords stayed
+      // put. The firmware uses it to move the password along with its pool.
+      // Travels with the FormGroup automatically when the array is reordered.
+      passwordFromSlot: [p.__slot ?? null],
       enonceSubscribe: [(p.enonceSubscribe ?? 0) == 1],
       tls: [(p.tls ?? 0) == 1],
       protocol: [p.protocol ?? 0],                       // 0 = V1, 1 = V2
@@ -263,27 +271,16 @@ export class EditComponent implements OnInit {
    * for the whole downshift and then calls removePool() in a loop - confirming
    * inside removePool() would ask again for every slot it drops.
    *
-   * Two things are lost on save and both are worth spelling out. The pool's own
-   * settings and password go, and the settings API never returns a password, so
-   * that is final. And because a saved password stays with its NVS slot while
-   * everything else shifts up, the pools below this one would otherwise point at
-   * the previous occupant's password until they are re-entered.
+   * What is lost is this pool's own settings and password. The settings API
+   * never returns a password, so that part is final. The pools below it keep
+   * theirs - each one carries its originating slot in passwordFromSlot and the
+   * firmware moves the password along with it.
    */
   public removePoolWithConfirm(i: number): void {
     if (this.poolsArray.length <= 1) return;
 
-    const below = this.poolsArray.length - (i + 1);
-    let msg = `Remove Pool ${i + 1}? Its settings and password are erased when you save, `
-            + `and the password cannot be recovered.`;
-    if (below > 0) {
-      const names = Array.from({ length: below }, (_, k) => `Pool ${i + 2 + k}`);
-      const joined = names.length === 1
-        ? names[0]
-        : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
-      msg += `\n\n${joined} will move up, but a saved password stays with its slot, `
-           + `so you will need to re-enter the password for ${names.length === 1 ? 'it' : 'each of them'}.`;
-    }
-    msg += `\n\nContinue?`;
+    const msg = `Remove Pool ${i + 1}? Its settings and password are erased when you save, `
+              + `and the password cannot be recovered.\n\nContinue?`;
 
     if (!confirm(msg)) return;
     this.removePool(i);
@@ -382,7 +379,9 @@ export class EditComponent implements OnInit {
           customMempoolEnabled: [!!info.mempoolCustom],
           mempoolUrl: [info.mempoolUrl || 'https://mempool.space'],
           timeFormat: [this.localStorageService.getItem('timeFormat') || '24h'],
-          pools: this.fb.array(poolsInfo.map((p, i) => this.createPoolGroup(p, i))),
+          // __slot records which NVS slot each pool came from, so its password
+          // can follow it if the list is later reordered or shortened.
+          pools: this.fb.array(poolsInfo.map((p, i) => this.createPoolGroup({ ...p, __slot: i }, i))),
 
           hostname: [info.hostname, [Validators.required]],
           ssid: [info.ssid, [Validators.required]],
@@ -555,7 +554,15 @@ export class EditComponent implements OnInit {
         coinbaseVerifyForce: !!p.coinbaseVerifyForce,
         weight: p.weight,
       };
-      if (p.password !== '*****') pool.password = p.password;
+      if (p.password !== '*****') {
+        // Retyped, so send it and let it overwrite whatever the slot held.
+        pool.password = p.password;
+      } else if (p.passwordFromSlot !== null && p.passwordFromSlot !== undefined) {
+        // Still masked: the form never had the real value. Tell the firmware
+        // which slot to carry the password over from, so reordering or removing
+        // a pool does not leave the ones below it holding the wrong password.
+        pool.passwordFromSlot = p.passwordFromSlot;
+      }
       return pool;
     });
 

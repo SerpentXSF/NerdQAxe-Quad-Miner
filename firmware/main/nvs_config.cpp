@@ -762,13 +762,39 @@ void applyPoolsJson(JsonArrayConst pools, bool *verifyChanged)
         return;
     }
 
+    // Snapshot every stored password before writing anything.
+    //
+    // A password is never sent back to the browser, so the UI cannot resubmit
+    // one it did not just type - it leaves the field masked and the field is
+    // omitted from the payload. Everything else about a pool (url, user, port)
+    // does get resubmitted, so when pools are reordered or one is removed, the
+    // other fields shift to new slots while the passwords sat still: slot 1
+    // would end up holding pool 3's address with pool 2's password.
+    //
+    // The UI now tags each pool with passwordFromSlot, the slot it was loaded
+    // from, and the password travels with it. Taking the snapshot first is what
+    // makes a swap work - writing in place would clobber the source before the
+    // pool that needs it is reached.
+    char *oldPass[MAX_POOLS];
+    for (int i = 0; i < MAX_POOLS; i++) {
+        oldPass[i] = getPoolPass(i);
+    }
+
     for (int i = 0; i < n; i++) {
         JsonObjectConst pool = pools[i].as<JsonObjectConst>();
 
         if (pool["url"].is<const char*>())                setPoolURL(i, pool["url"].as<const char*>());
         if (pool["port"].is<uint16_t>())                  setPoolPort(i, pool["port"].as<uint16_t>());
         if (pool["user"].is<const char*>())               setPoolUser(i, pool["user"].as<const char*>());
-        if (pool["password"].is<const char*>())           setPoolPass(i, pool["password"].as<const char*>());
+        if (pool["password"].is<const char*>()) {
+            // The user retyped it; that always wins.
+            setPoolPass(i, pool["password"].as<const char*>());
+        } else if (pool["passwordFromSlot"].is<int>()) {
+            int src = pool["passwordFromSlot"].as<int>();
+            if (src >= 0 && src < MAX_POOLS && src != i && oldPass[src]) {
+                setPoolPass(i, oldPass[src]);
+            }
+        }
         if (pool["enonceSubscribe"].is<bool>())           setPoolEnonceSub(i, pool["enonceSubscribe"].as<bool>());
         if (pool["tls"].is<bool>())                       setPoolTLS(i, pool["tls"].as<bool>());
         if (pool["protocol"].is<uint16_t>())              setPoolProtocol(i, pool["protocol"].as<uint16_t>());
@@ -806,6 +832,10 @@ void applyPoolsJson(JsonArrayConst pools, bool *verifyChanged)
         setPoolWeight(j, 25); // matches the default in getPoolWeight() above
         if (verifyChanged && getCoinbaseVerifyMode(j) != 0) verifyChanged[j] = true;
         setCoinbaseVerifyMode(j, 0);
+    }
+
+    for (int i = 0; i < MAX_POOLS; i++) {
+        safe_free(oldPass[i]);
     }
 }
 
