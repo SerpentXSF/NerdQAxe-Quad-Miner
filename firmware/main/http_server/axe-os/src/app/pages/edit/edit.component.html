@@ -111,7 +111,7 @@
                                         [disabled]="i === poolsArray.length - 1" nbTooltip="Move down">
                                     <nb-icon icon="arrow-downward-outline" pack="eva"></nb-icon>
                                 </button>
-                                <button nbButton ghost status="danger" size="tiny" type="button" (click)="removePool(i)"
+                                <button nbButton ghost status="danger" size="tiny" type="button" (click)="removePoolWithConfirm(i)"
                                         [disabled]="poolsArray.length <= 1" nbTooltip="Remove pool">
                                     <nb-icon icon="trash-2-outline" pack="eva"></nb-icon>
                                 </button>

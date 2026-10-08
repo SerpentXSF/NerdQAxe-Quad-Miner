@@ -224,6 +224,39 @@ export class EditComponent implements OnInit {
     this.lastCoinbaseVerifyMode.push(1);
   }
 
+  /**
+   * Trash-button entry point: confirm before removing a pool.
+   *
+   * Separate from removePool() because onPoolPresetChange() already prompts once
+   * for the whole downshift and then calls removePool() in a loop - confirming
+   * inside removePool() would ask again for every slot it drops.
+   *
+   * Two things are lost on save and both are worth spelling out. The pool's own
+   * settings and password go, and the settings API never returns a password, so
+   * that is final. And because a saved password stays with its NVS slot while
+   * everything else shifts up, the pools below this one would otherwise point at
+   * the previous occupant's password until they are re-entered.
+   */
+  public removePoolWithConfirm(i: number): void {
+    if (this.poolsArray.length <= 1) return;
+
+    const below = this.poolsArray.length - (i + 1);
+    let msg = `Remove Pool ${i + 1}? Its settings and password are erased when you save, `
+            + `and the password cannot be recovered.`;
+    if (below > 0) {
+      const names = Array.from({ length: below }, (_, k) => `Pool ${i + 2 + k}`);
+      const joined = names.length === 1
+        ? names[0]
+        : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
+      msg += `\n\n${joined} will move up, but a saved password stays with its slot, `
+           + `so you will need to re-enter the password for ${names.length === 1 ? 'it' : 'each of them'}.`;
+    }
+    msg += `\n\nContinue?`;
+
+    if (!confirm(msg)) return;
+    this.removePool(i);
+  }
+
   public removePool(i: number): void {
     // Allow down to a single pool (mine to just one). Failover mode still needs
     // a fallback, but the firmware keeps a harmless empty second slot for that.
