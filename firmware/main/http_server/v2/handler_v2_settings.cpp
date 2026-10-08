@@ -38,6 +38,11 @@ esp_err_t GET_V2_settings(httpd_req_t *req)
     // --- device identity ---
     doc["asicModel"]   = board->getAsicModel();
     doc["deviceModel"] = board->getDeviceModel();
+    // How many ASICs this board carries. The settings page uses it to decide
+    // whether to offer the three- and four-pool presets: the job-level split
+    // would technically drive them on one chip, but a single-ASIC board has too
+    // little hashrate per pool for vardiff to settle.
+    doc["asicCount"]   = board->getAsicCount();
     doc["version"]     = esp_app_get_description()->version;
     doc["otp"]         = Config::isOTPEnabled();
     doc["apActive"]    = NETWORK.isApActive();

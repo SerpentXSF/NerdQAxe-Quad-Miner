@@ -80,3 +80,49 @@ export function droppedPoolNames(targetCount: number, storedCount: number): stri
   }
   return dropped;
 }
+
+/** Fewest ASICs a board needs before Triple and Quad are offered. */
+export const MULTI_POOL_MIN_ASICS = 4;
+
+/**
+ * Presets to offer on a board with this many ASICs.
+ *
+ * Single, Failover and Dual are always available - dual-pool mining ships today
+ * on single-ASIC hardware. Triple and Quad are held back below
+ * MULTI_POOL_MIN_ASICS: the split is job-level, so a lone chip *can* drive four
+ * pools, but a ~1 TH/s board split four ways leaves each pool ~250 GH/s, too
+ * little for pool vardiff to settle on. In this tree only nerdaxe and
+ * nerdaxegamma have one ASIC; every other board has 4, 6, 8 or 12.
+ *
+ * `current` is always included even when gated, so a board that already holds a
+ * Triple or Quad configuration still shows its real state instead of a blank
+ * control.
+ */
+export function availablePresets(asicCount: number, current: PoolPreset): PoolPreset[] {
+  const presets = [PoolPreset.SINGLE, PoolPreset.FAILOVER, PoolPreset.DUAL];
+  const multiPoolOk = asicCount >= MULTI_POOL_MIN_ASICS;
+
+  if (multiPoolOk || current === PoolPreset.TRIPLE) {
+    presets.push(PoolPreset.TRIPLE);
+  }
+  if (multiPoolOk || current === PoolPreset.QUAD) {
+    presets.push(PoolPreset.QUAD);
+  }
+  return presets;
+}
+
+/** Translation key for a preset's dropdown label. */
+export function presetLabelKey(preset: PoolPreset): string {
+  switch (preset) {
+    case PoolPreset.SINGLE:
+      return 'SETTINGS.POOL_MODE_SINGLE';
+    case PoolPreset.FAILOVER:
+      return 'SETTINGS.POOL_MODE_FAILOVER';
+    case PoolPreset.DUAL:
+      return 'SETTINGS.POOL_MODE_DUAL';
+    case PoolPreset.TRIPLE:
+      return 'SETTINGS.POOL_MODE_TRIPLE';
+    case PoolPreset.QUAD:
+      return 'SETTINGS.POOL_MODE_QUAD';
+  }
+}

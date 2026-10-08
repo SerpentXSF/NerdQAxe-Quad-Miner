@@ -34,6 +34,8 @@ export interface ISettingsV2 {
     // Device identity
     asicModel: eASICModel;
     deviceModel: string;
+    /** ASICs on this board. Gates the three- and four-pool presets. */
+    asicCount?: number;
     version: string;
     otp: boolean;
     apActive: boolean;

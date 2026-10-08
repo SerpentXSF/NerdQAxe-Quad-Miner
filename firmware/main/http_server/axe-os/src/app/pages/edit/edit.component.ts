@@ -10,7 +10,15 @@ import { LocalStorageService } from 'src/app/services/local-storage.service';
 import { OtpAuthService, EnsureOtpResult, EnsureOtpOptions } from '../../services/otp-auth.service';
 import { TranslateService } from '@ngx-translate/core';
 import { ISettingsV2, ISettingsV2Fan } from '../../models/ISettingsV2';
-import { PoolPreset, configFor, droppedPoolNames, presetFor } from './pool-preset';
+import {
+  MULTI_POOL_MIN_ASICS,
+  PoolPreset,
+  availablePresets,
+  configFor,
+  droppedPoolNames,
+  presetFor,
+  presetLabelKey,
+} from './pool-preset';
 
 enum SupportLevel { Safe = 0, Advanced = 1, Pro = 2 }
 
@@ -47,6 +55,13 @@ export class EditComponent implements OnInit {
 
   // Multi-pool support
   public maxPools: number = 4;
+  /**
+   * ASICs on this board, used to gate the Triple and Quad presets. Defaults to
+   * the threshold so an older firmware that does not report it keeps offering
+   * every preset - hiding one a board can use is worse than showing one it
+   * cannot.
+   */
+  public asicCount: number = MULTI_POOL_MIN_ASICS;
   public showPoolPassword: boolean[] = [];
 
   // WiFi scan
@@ -126,6 +141,23 @@ export class EditComponent implements OnInit {
     const mode = this.form?.get('poolMode')?.value ?? 0;
     const count = this.poolsArray?.length ?? 1;
     return presetFor(mode, count);
+  }
+
+  /**
+   * Presets this board can offer. Triple and Quad are held back on single-ASIC
+   * hardware - see availablePresets().
+   *
+   * asicCount falls back to MULTI_POOL_MIN_ASICS when the device does not report
+   * it, so an older firmware paired with this UI keeps showing every preset
+   * rather than silently hiding ones its board can actually use.
+   */
+  get poolPresetOptions(): PoolPreset[] {
+    return availablePresets(this.asicCount, this.currentPoolPreset);
+  }
+
+  /** Translation key for a preset's dropdown label. */
+  public poolPresetLabel(preset: PoolPreset): string {
+    return presetLabelKey(preset);
   }
 
   /**
@@ -296,6 +328,7 @@ export class EditComponent implements OnInit {
         this.originalSettings["canMaster"] = info.can?.enabled ? 1 : 0;
 
         this.maxPools = info.maxPools ?? 4;
+        this.asicCount = info.asicCount ?? MULTI_POOL_MIN_ASICS;
         const poolsInfo = (info.pools && info.pools.length) ? info.pools : [{} as any, {} as any];
         this.showPoolPassword = poolsInfo.map(() => false);
         this.lastCoinbaseVerifyMode = poolsInfo.map(p => p.coinbaseVerifyMode || 1);
