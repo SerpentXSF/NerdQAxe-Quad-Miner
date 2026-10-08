@@ -146,7 +146,21 @@ uint32_t StratumManagerDualPool::selectAsicDiff(int pool, uint32_t poolDiff)
 {
     Board *board = SYSTEM_MODULE.getBoard();
     uint32_t asicMax = board->getAsicMaxDifficulty();
-    uint32_t asicMin = board->getAsicMinDifficultyDualPool();
+    // A lone pool does not need the relaxed dual-pool minimum. The presets
+    // cannot reach DUAL with one pool (Single Pool maps to FAILOVER), but a
+    // device configured before the selector existed can be in that state, and
+    // pressing "-" down to one pool still lands there, so the guard is live.
+    //
+    // How much this changes depends on the board's two thresholds. Most are
+    // 2:1 (nerdqaxeplus2 512/256), but nerdhaxegamma, nerdoctaxegamma and
+    // nerdqx are 4:1 (1024/256) and nerdeko is 8:1 (2048/256). On those the
+    // ASIC stops reporting nonces below the higher floor, so against a
+    // fixed-difficulty pool the visible share rate drops by that factor while
+    // credited work is unchanged. That is the same floor FAILOVER already
+    // applies to a single pool on the same hardware - this only makes the two
+    // single-pool paths agree.
+    uint32_t asicMin = (m_numPools == 1) ? board->getAsicMinDifficulty()
+                                         : board->getAsicMinDifficultyDualPool();
 
     // shouldn't happen
     if (pool < 0 || pool >= MAX_POOLS) {
