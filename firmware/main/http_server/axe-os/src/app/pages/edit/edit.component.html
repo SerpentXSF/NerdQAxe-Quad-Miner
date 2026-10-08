@@ -50,7 +50,7 @@
                 <div class="form-row">
                     <label class="form-label">{{ 'SETTINGS.POOL_MODE' | translate }}:</label>
                     <div class="form-control-wrapper">
-                        <nb-select [selected]="currentPoolPreset">
+                        <nb-select #poolPresetSelect [selected]="currentPoolPreset" (selectedChange)="onPoolPresetChange($event)">
                             <nb-option value="single">
                                 {{ 'SETTINGS.POOL_MODE_SINGLE' | translate }}
                             </nb-option>

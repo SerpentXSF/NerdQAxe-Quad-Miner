@@ -1,16 +1,16 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, Input, OnInit, TemplateRef } from '@angular/core';
+import { Component, Input, OnInit, TemplateRef, ViewChild } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { switchMap, startWith, tap, catchError, of } from 'rxjs';
 import { LoadingService } from '../../services/loading.service';
 import { SystemService } from '../../services/system.service';
 import { eASICModel } from '../../models/enum/eASICModel';
-import { NbToastrService, NbDialogService, NbDialogRef } from '@nebular/theme';
+import { NbToastrService, NbDialogService, NbDialogRef, NbSelectComponent } from '@nebular/theme';
 import { LocalStorageService } from 'src/app/services/local-storage.service';
 import { OtpAuthService, EnsureOtpResult, EnsureOtpOptions } from '../../services/otp-auth.service';
 import { TranslateService } from '@ngx-translate/core';
 import { ISettingsV2, ISettingsV2Fan } from '../../models/ISettingsV2';
-import { PoolPreset, presetFor } from './pool-preset';
+import { PoolPreset, configFor, droppedPoolNames, presetFor } from './pool-preset';
 
 enum SupportLevel { Safe = 0, Advanced = 1, Pro = 2 }
 
@@ -70,6 +70,11 @@ export class EditComponent implements OnInit {
   public ecoCoreVoltage: number = 0;
 
   private originalSettings!: any;
+  // Number of pools the device actually holds. Seeded from the settings load and
+  // refreshed after each successful save (originalSettings is not), so the
+  // erase prompt in onPoolPresetChange() never under-counts what a shrink drops.
+  // Deliberately separate from originalSettings.pools, which requiresReboot reads.
+  private storedPoolCount?: number;
 
   public otpEnabled = false;
   public hasCanExtension = false;
@@ -90,6 +95,8 @@ export class EditComponent implements OnInit {
     'canMaster',
     'poolMode',
   ]);
+
+  @ViewChild('poolPresetSelect') poolPresetSelect?: NbSelectComponent;
 
   @Input() uri = '';
 
@@ -119,6 +126,67 @@ export class EditComponent implements OnInit {
     const mode = this.form?.get('poolMode')?.value ?? 0;
     const count = this.poolsArray?.length ?? 1;
     return presetFor(mode, count);
+  }
+
+  /**
+   * Apply a preset: set poolMode and grow or shrink the visible pool slots.
+   *
+   * Shrinking below what the device has stored clears those slots on save
+   * (Config::applyPoolsJson clears every slot the submitted array does not
+   * cover), and their passwords cannot be recovered because the settings API
+   * never returns them - so confirm first, naming the pools.
+   *
+   * On cancel nothing in the form is touched, but the control's display must
+   * be pushed back explicitly: Nebular moves its own selection the moment an
+   * option is clicked, and `[selected]` only re-pushes when the bound value
+   * changes. The derived getter is unchanged on cancel, so Angular sees no
+   * change and would leave the dropdown showing a preset the form does not
+   * have.
+   */
+  public onPoolPresetChange(preset: PoolPreset): void {
+    const cfg = configFor(preset);
+    // The dropdown always offers all five presets, but maxPools is supplied by
+    // the device. addPool() silently refuses to grow past maxPools, so a target
+    // above it would make the grow loop below spin forever (and freeze the tab).
+    // Clamp the target - do not remove this as "redundant" - and use it for the
+    // prompt too, so it describes what will actually be erased.
+    const targetCount = Math.min(cfg.poolCount, this.maxPools);
+    const storedCount = this.storedPoolCount ?? this.poolsArray.length;
+
+    const dropped = droppedPoolNames(targetCount, storedCount);
+    if (dropped.length > 0) {
+      const names = dropped.length === 1
+        ? dropped[0]
+        : `${dropped.slice(0, -1).join(', ')} and ${dropped[dropped.length - 1]}`;
+      const ok = confirm(
+        `This will erase ${names}, including ${dropped.length === 1 ? 'its password' : 'their passwords'}, ` +
+        `which cannot be recovered.\n\nContinue?`
+      );
+      if (!ok) {
+        this.revertPoolPresetDisplay();
+        return;
+      }
+    }
+
+    this.form.get('poolMode')?.setValue(cfg.poolMode);
+    while (this.poolsArray.length > targetCount) {
+      this.removePool(this.poolsArray.length - 1);
+    }
+    while (this.poolsArray.length < targetCount) {
+      this.addPool();
+    }
+  }
+
+  /**
+   * Push the derived preset back into the Nebular control.
+   *
+   * Needed only on cancel. Nebular has already moved its own displayed
+   * selection to the clicked option, and since the derived getter did not
+   * change, Angular will not re-evaluate the [selected] binding. Without this
+   * the dropdown would claim a preset the form does not hold.
+   */
+  private revertPoolPresetDisplay(): void {
+    this.poolPresetSelect?.writeValue(this.currentPoolPreset);
   }
 
   private createPoolGroup(p: any = {}, index: number = 0): FormGroup {
@@ -189,6 +257,7 @@ export class EditComponent implements OnInit {
       .pipe(this.loadingService.lockUIUntilComplete())
       .subscribe((info: ISettingsV2) => {
         this.originalSettings = structuredClone(info);
+        this.storedPoolCount = info.pools?.length;
 
         this.originalSettings["poolMode"] = info.poolMode ?? 0;
         this.originalSettings["canMaster"] = info.can?.enabled ? 1 : 0;
@@ -477,7 +546,11 @@ export class EditComponent implements OnInit {
     const wifiPass = f.wifiPass == null ? '' : f.wifiPass;
     if (wifiPass !== '*****') payload.wifiPass = wifiPass;
 
-    return this.systemService.updateSettingsV2(this.uri, payload, totp);
+    return this.systemService.updateSettingsV2(this.uri, payload, totp).pipe(
+      // The device now holds exactly the pools we submitted. No re-fetch: a save
+      // is often followed by a reboot and the request could race it.
+      tap(() => { this.storedPoolCount = pools.length; })
+    );
   }
 
   get requiresReboot(): boolean {
