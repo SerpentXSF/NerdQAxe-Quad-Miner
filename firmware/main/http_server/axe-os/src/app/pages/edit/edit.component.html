@@ -50,14 +50,24 @@
                 <div class="form-row">
                     <label class="form-label">{{ 'SETTINGS.POOL_MODE' | translate }}:</label>
                     <div class="form-control-wrapper">
-                        <nb-select formControlName="poolMode">
-                            <nb-option [value]="0">
+                        <nb-select [selected]="currentPoolPreset">
+                            <nb-option value="single">
+                                {{ 'SETTINGS.POOL_MODE_SINGLE' | translate }}
+                            </nb-option>
+                            <nb-option value="failover">
                                 {{ 'SETTINGS.POOL_MODE_FAILOVER' | translate }}
                             </nb-option>
-                            <nb-option [value]="1">
+                            <nb-option value="dual">
                                 {{ 'SETTINGS.POOL_MODE_DUAL' | translate }}
                             </nb-option>
+                            <nb-option value="triple">
+                                {{ 'SETTINGS.POOL_MODE_TRIPLE' | translate }}
+                            </nb-option>
+                            <nb-option value="quad">
+                                {{ 'SETTINGS.POOL_MODE_QUAD' | translate }}
+                            </nb-option>
                         </nb-select>
+                        <small>{{ 'SETTINGS.POOL_MODE_HINT' | translate }}</small>
                     </div>
                 </div>
                 <div class="form-row" *ngIf="form.controls['poolMode'].value === 1 && poolsArray.length === 2">

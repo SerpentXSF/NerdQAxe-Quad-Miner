@@ -10,6 +10,7 @@ import { LocalStorageService } from 'src/app/services/local-storage.service';
 import { OtpAuthService, EnsureOtpResult, EnsureOtpOptions } from '../../services/otp-auth.service';
 import { TranslateService } from '@ngx-translate/core';
 import { ISettingsV2, ISettingsV2Fan } from '../../models/ISettingsV2';
+import { PoolPreset, presetFor } from './pool-preset';
 
 enum SupportLevel { Safe = 0, Advanced = 1, Pro = 2 }
 
@@ -107,6 +108,17 @@ export class EditComponent implements OnInit {
 
   get poolsArray(): FormArray {
     return this.form.get('pools') as FormArray;
+  }
+
+  /**
+   * The preset matching the current form state. Derived, never stored - so the
+   * Add/Remove Pool buttons update the dropdown for free and there is no
+   * two-way sync to fall out of step.
+   */
+  get currentPoolPreset(): PoolPreset {
+    const mode = this.form?.get('poolMode')?.value ?? 0;
+    const count = this.poolsArray?.length ?? 1;
+    return presetFor(mode, count);
   }
 
   private createPoolGroup(p: any = {}, index: number = 0): FormGroup {
