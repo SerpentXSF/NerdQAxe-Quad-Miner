@@ -2,9 +2,12 @@
 /PATH-A-DESIGN.md
 /PATH-B-FEASIBILITY.md
 /STATUS-AND-TODO.md
+/POOL-MODE-SELECTOR-DESIGN.md
+/POOL-MODE-SELECTOR-PLAN.md
 /firmware/DUAL_MINING_NOTES.md
 /firmware-backups/
 /baseline-build/
+/.superpowers/
 
 # Build artifacts / dependencies (firmware/.gitignore covers most of these too)
 firmware/build/
