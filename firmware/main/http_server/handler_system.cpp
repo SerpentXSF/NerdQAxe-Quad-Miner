@@ -127,6 +127,11 @@ esp_err_t GET_system_info(httpd_req_t *req)
     doc["hashRate_10m"]       = !shutdown ? history->getCurrentHashrate10m()   : 0.0;
     doc["hashRate_1h"]        = !shutdown ? history->getCurrentHashrate1h()    : 0.0;
     doc["hashRate_1d"]        = !shutdown ? history->getCurrentHashrate1d()    : 0.0;
+    // Hardware error rate, at the same root level and under the same name AxeOS
+    // uses, so one fleet/tuning threshold works across both firmware families.
+    // The per-chip breakdown lives in the v2 dashboard's performance.chips[].
+    doc["errorHashRate"]      = !shutdown ? HASHRATE_MONITOR.getTotalChipErrorRate() : 0.0;
+    doc["errorPercentage"]    = !shutdown ? HASHRATE_MONITOR.getErrorPercentage()    : 0.0;
     doc["coreVoltage"]        = board->getAsicVoltageMillis();
     doc["defaultCoreVoltage"] = board->getDefaultAsicVoltageMillis();
     doc["coreVoltageActual"]  = (int) (board->getVout() * 1000.0f);

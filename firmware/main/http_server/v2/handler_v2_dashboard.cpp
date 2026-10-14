@@ -99,6 +99,13 @@ esp_err_t GET_V2_dashboard(httpd_req_t *req)
             chip["hashRate"]      = !shutdown ? HASHRATE_MONITOR.getChipHashrate(i)  : 0.0;
             chip["errorHashRate"] = !shutdown ? HASHRATE_MONITOR.getChipErrorRate(i) : 0.0;
         }
+
+        // Device-wide rollup of the same counters. The per-chip array above is
+        // what the UI graphs; these two are what external tooling reads, and
+        // "errorPercentage" is deliberately the same error/valid ratio AxeOS
+        // publishes so one threshold works across both firmware families.
+        perf["errorHashRate"]   = !shutdown ? HASHRATE_MONITOR.getTotalChipErrorRate() : 0.0;
+        perf["errorPercentage"] = !shutdown ? HASHRATE_MONITOR.getErrorPercentage()    : 0.0;
     }
 
     // --- power ---

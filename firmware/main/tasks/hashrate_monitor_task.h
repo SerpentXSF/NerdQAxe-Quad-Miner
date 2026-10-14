@@ -110,6 +110,11 @@ class HashrateMonitor {
     float getChipHashrate(int nr);
     float getChipErrorRate(int nr);
 
+    // Device-wide hardware error rate: summed error hashrate (GH/s) and the
+    // error/valid ratio in percent, matching AxeOS's "errorPercentage".
+    float getTotalChipErrorRate();
+    float getErrorPercentage();
+
     float getSmoothedTotalChipHashrate() {
       return m_smoothedHashrate;
     }

@@ -94,7 +94,15 @@ Real-time mining telemetry. Used by the Home page (polled every 2s).
     "sharesRejected": 3,
     "frequency": 525,
     "asicCount": 4,
-    "smallCoreCount": 672
+    "smallCoreCount": 672,
+    "chips": [
+      { "hashRate": 1620.4, "errorHashRate": 10.2 },
+      { "hashRate": 1611.8, "errorHashRate": 8.7 },
+      { "hashRate": 1634.1, "errorHashRate": 11.5 },
+      { "hashRate": 1628.0, "errorHashRate": 9.9 }
+    ],
+    "errorHashRate": 40.3,
+    "errorPercentage": 0.62
   },
   "power": {
     "watts": 15.2,
@@ -184,6 +192,10 @@ Real-time mining telemetry. Used by the Home page (polled every 2s).
 The `history` object is only present when `ts` query parameter is provided. It contains arrays of hashrate and temperature samples for charting.
 
 `stratum.pools[]` always contains both pool configs in config order: index 0 = primary, index 1 = fallback (failover mode) or secondary (dual pool mode). `active` marks the pool that is currently mining — in failover mode exactly one entry is active (also reflected by `usingFallback`), in dual pool mode both are. In failover mode the session stats (`accepted`, `rejected`, `bestDiff`, `poolDifficulty`, `networkDifficulty`) are shared between both pools and reported on the active entry only.
+
+`performance.chips[]` has one entry per ASIC, in chip order, carrying that chip's valid `hashRate` and its hardware `errorHashRate` (both GH/s, from ASIC registers 0x90 and 0x4C). `performance.errorHashRate` is the sum of those, and `performance.errorPercentage` is `errorHashRate / sum(chips[].hashRate) * 100` — error over **valid** work, not over the total, which is the same ratio AxeOS publishes under this name so a single threshold applies to both firmware families. Both fields are also mirrored at the root of `GET /api/system/info` for tooling that reads the v1 API.
+
+Two caveats worth knowing: `errorPercentage` divides by the raw per-chip sum while `performance.hashRate` is a smoothed/median value, so `errorHashRate / hashRate` from the JSON will not exactly equal `errorPercentage`. And the two register bursts are read 500ms apart (they truncate each other if overlapped), so the figure is not an exact instantaneous ratio. It also reads high for the first measurement window after boot, which is real ASIC error during the frequency rampup.
 
 ---
 

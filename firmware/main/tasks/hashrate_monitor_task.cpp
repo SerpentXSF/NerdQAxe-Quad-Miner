@@ -75,6 +75,39 @@ float HashrateMonitor::getTotalChipHashrate() {
     return total;
 }
 
+float HashrateMonitor::getTotalChipErrorRate() {
+    float total = 0.0f;
+    for (int i=0;i < m_asicCount; i++) {
+        total += m_chipErrorRate[i];
+    }
+    return total;
+}
+
+float HashrateMonitor::getErrorPercentage() {
+    // Same ratio AxeOS reports as "errorPercentage": error hashrate over the
+    // VALID hashrate, not over the total. Keeping the denominator valid-only is
+    // what makes this number comparable to the BitAxe reading that the fleet
+    // tooling and the per-device tuning thresholds are calibrated against.
+    //
+    // Both sides are per-chip ASIC counters read in the same loop iteration,
+    // but not at the same instant: the 0x90 and 0x4C READ_ALL bursts are
+    // deliberately 500ms apart, because they truncate each other if they
+    // overlap. So for part of each 5s period this pairs one window's valid rate
+    // with the previous window's error rate. Harmless for a rate this
+    // slow-moving, but it is why the figure should not be read as an exact
+    // instantaneous ratio.
+    //
+    // The numerator register (0x4C) is the same one AxeOS uses. The
+    // denominators differ by register number - AxeOS counts valid work on 0x8C,
+    // NerdOS on 0x90 - but each is the counter its own firmware already derives
+    // its reported hashrate from, so the ratio means the same thing.
+    float valid = getTotalChipHashrate();
+    if (valid <= 0.0f) {
+        return 0.0f;
+    }
+    return getTotalChipErrorRate() / valid * 100.0f;
+}
+
 void HashrateMonitor::taskWrapper(void *pv)
 {
     auto *self = static_cast<HashrateMonitor *>(pv);
