@@ -166,6 +166,11 @@ esp_err_t start_rest_server(void * pvParameters)
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
     config.uri_match_fn = httpd_uri_match_wildcard;
     config.max_uri_handlers = 50;
+    // IDF defaults to 8 response-header slots. set_cors_headers() alone uses 5,
+    // and the core dump download adds three more, which lands exactly on the
+    // limit; the next header added anywhere would silently start failing the
+    // last set_hdr call. Give it headroom instead of leaving that trap armed.
+    config.max_resp_headers = 16;
     config.lru_purge_enable = true;
     config.max_open_sockets = 10;
     config.stack_size = 12288;

@@ -226,6 +226,35 @@ Use a development device to validate the path. There is no production crash endp
 
 Five task snapshots is the intended conservative limit for this partition. The ESP-IDF 5.3 revision currently used by CI defines this setting but does not enforce it in the core-dump writer, so a dump taken with many heavily used task stacks can still exceed 64K. Full-load validation is required when the toolchain changes.
 
+> **Known limitation on this fork: capture does not currently work on NERDQAXEPLUS2.**
+> Validated on a 4-ASIC NerdQAxe++ by forcing repeated panics under full four-pool
+> mining load. Every panic was real (`lastResetReason` became `SYSTEM.RESET_PANIC`
+> and uptime reset), yet `GET /api/system/coredump` returned "No valid core dump
+> stored" every time, so nothing was persisted. The endpoint, the capability flag,
+> the gating and the download path all behave correctly; what fails is the write.
+>
+> The leading explanation is that the dump does not fit the 64K partition. That is
+> consistent with the evidence but **not proven**: the one diagnostic that would
+> confirm it is the writer's own `Not enough space to save core dump!` message,
+> which the panic handler prints to the **UART console only**. It never reaches
+> `/api/system/logs` or the log websocket, so it cannot be read remotely.
+> `CONFIG_ESP_COREDUMP_LOGS=y` is set here precisely so that message is there for
+> anyone with a serial cable attached. Confirming the cause needs serial access.
+>
+> Supporting detail: `MAX_TASKS_NUM` appears only in espcoredump's Kconfig and is
+> referenced nowhere in its `src/`, so the IDF 5.3.3 writer captures every task. It
+> refuses the whole dump up front when
+> `data_len + padding + checksum > partition.size` (`core_dump_flash.c:218`). This
+> fork runs more tasks than upstream (four stratum plus four ping tasks for
+> multi-pool), which is why capture may well work upstream and not here.
+>
+> Growing the `coredump` partition is the obvious fix, and there is roughly 950K of
+> unused flash after `otadata`. But the partition table lives at 0x8000 and is
+> **not** written by OTA, so a resize can only be delivered by a full serial flash.
+> Since a diagnostic build only ever goes on a device being actively debugged,
+> which is a serial operation anyway, that is an acceptable shape for the fix. It
+> is not done here.
+
 Core dumps can contain credentials and other sensitive values present in task RAM. They are not uploaded automatically; do not casually share or attach a raw dump without reviewing how it will be handled.
 
 

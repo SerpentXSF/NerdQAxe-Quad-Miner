@@ -1,5 +1,6 @@
 {
   "COMMON": {
+    "INFO": "Info",
     "LOADING": "Laden...",
     "SAVE": "Speichern",
     "CANCEL": "Abbrechen",

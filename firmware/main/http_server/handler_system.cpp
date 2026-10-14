@@ -64,7 +64,12 @@ static esp_err_t getCoreDumpElfSha256(const esp_partition_t *partition, size_t d
         read_offset += read_size - (marker_size - 1);
     }
 
-    if (marker_offset < sizeof(ElfNoteHeader)) {
+    // SIZE_MAX means the scan never found the marker, and SIZE_MAX is not less
+    // than sizeof(ElfNoteHeader), so without the first test this falls through
+    // and reads at SIZE_MAX - 12. esp_partition_read() range-checks and refuses,
+    // so nothing unsafe happens, but the caller then logs ESP_ERR_INVALID_ARG
+    // instead of "not found" and the real reason is lost.
+    if (marker_offset == SIZE_MAX || marker_offset < sizeof(ElfNoteHeader)) {
         return ESP_ERR_NOT_FOUND;
     }
 
@@ -160,7 +165,9 @@ esp_err_t GET_system_coredump(httpd_req_t *req)
     }
 
     httpd_resp_set_type(req, "application/octet-stream");
-    httpd_resp_set_hdr(req, "Cache-Control", "no-store");
+    // Upstream sets Cache-Control here because its set_cors_headers() does not.
+    // Ours already sends "no-store" for every API response, so repeating it would
+    // just burn one of httpd's limited response-header slots on a duplicate.
     httpd_resp_set_hdr(req, "X-Content-Type-Options", "nosniff");
 
     if (httpd_resp_set_hdr(req, "X-ESP-App-ELF-SHA256", elf_sha256) != ESP_OK) {

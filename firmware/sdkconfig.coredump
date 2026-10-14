@@ -10,7 +10,15 @@ CONFIG_ESP_COREDUMP_DATA_FORMAT_ELF=y
 CONFIG_ESP_COREDUMP_CHECKSUM_CRC32=y
 CONFIG_ESP_COREDUMP_CAPTURE_DRAM=n
 CONFIG_ESP_COREDUMP_CHECK_BOOT=y
-CONFIG_ESP_COREDUMP_LOGS=n
+# Keep the core-dump writer's own panic-time logging ON (upstream has this off).
+# If the dump does not fit the 64K partition, IDF refuses up front and stores
+# nothing, and the only clue is "Not enough space to save core dump!" on the
+# panic console. With logging off that failure is indistinguishable from "it
+# never panicked", because the endpoint just keeps answering 404. This fork runs
+# more tasks than upstream (four stratum plus four ping tasks for multi-pool) and
+# MAX_TASKS_NUM below is not enforced by the IDF 5.3 ELF writer, so running out
+# of room is a real possibility here rather than a theoretical one.
+CONFIG_ESP_COREDUMP_LOGS=y
 # IDF 5.3 defines this limit but does not enforce it; retain the conservative intent for toolchain updates
 CONFIG_ESP_COREDUMP_MAX_TASKS_NUM=5
 CONFIG_ESP_COREDUMP_STACK_SIZE=2048
